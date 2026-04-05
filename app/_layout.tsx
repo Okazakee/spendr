@@ -1,4 +1,4 @@
-import '../i18n';
+import './i18n';
 import 'react-native-get-random-values';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFonts } from 'expo-font';
