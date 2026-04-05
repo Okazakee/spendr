@@ -1,15 +1,15 @@
-# Expensify
+# Spendr
 <p align="center">
-  <img src="assets/images/icon.png" width="200" height="200" alt="Expensify App Icon"/>
+  <img src="assets/images/icon.png" width="200" height="200" alt="Spendr App Icon"/>
 </p>
 <p align="center">
   <b>A comprehensive personal finance tracker built with React Native & Expo</b>
 </p>
 
 ## 📱 Overview
-Expensify is a feature-rich expense tracking app that helps you manage your finances with ease. Track expenses, set budgets, monitor recurring transactions, and visualize your spending patterns - all in one beautiful, intuitive interface.
+Spendr is a feature-rich expense tracking app that helps you manage your finances with ease. Track expenses, set budgets, monitor recurring transactions, and visualize your spending patterns - all in one beautiful, intuitive interface.
 
-Built during the 24-hour hack.bs hackathon using React Native and Expo, Expensify combines powerful functionality with a sleek, modern design.
+Built during the 24-hour hack.bs hackathon using React Native and Expo, Spendr combines powerful functionality with a sleek, modern design.
 
 ## ✨ Features
 - **Expense & Income Tracking**: Record and categorize your daily expenses and income
@@ -33,9 +33,9 @@ Built during the 24-hour hack.bs hackathon using React Native and Expo, Expensif
 
 ## 📸 Screenshots
 <div align="center" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 20px 0;">
-  <img src="https://github.com/user-attachments/assets/0e28ff4e-74e3-4b38-9938-b38aa9af95f0" width="180" style="border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Expensify Screenshot 1" />
-  <img src="https://github.com/user-attachments/assets/7234f6d1-32b2-46b1-b290-0c0fb60493d9" width="180" style="border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Expensify Screenshot 2" />
-  <img src="https://github.com/user-attachments/assets/ed902938-2353-47c2-b20c-db4d97c1c706" width="180" style="border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Expensify Screenshot 3" />
+  <img src="https://github.com/user-attachments/assets/0e28ff4e-74e3-4b38-9938-b38aa9af95f0" width="180" style="border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Spendr Screenshot 1" />
+  <img src="https://github.com/user-attachments/assets/7234f6d1-32b2-46b1-b290-0c0fb60493d9" width="180" style="border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Spendr Screenshot 2" />
+  <img src="https://github.com/user-attachments/assets/ed902938-2353-47c2-b20c-db4d97c1c706" width="180" style="border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Spendr Screenshot 3" />
 </div>
 
 ## 📋 Getting Started
@@ -47,8 +47,8 @@ Built during the 24-hour hack.bs hackathon using React Native and Expo, Expensif
 ### Installation
 ```bash
 # Clone the repository
-git clone https://github.com/okazakee/expensify.git
-cd expensify
+git clone https://github.com/okazakee/spendr.git
+cd spendr
 
 # Install dependencies
 npm install

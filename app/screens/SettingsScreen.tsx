@@ -1,616 +1,587 @@
-import type React from 'react';
-import { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
-  Switch,
-  Alert,
-  ScrollView,
-  ActivityIndicator
-} from 'react-native';
-import { router, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-
+import { router, Stack } from 'expo-router';
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import {
+	ActivityIndicator,
+	Alert,
+	SafeAreaView,
+	ScrollView,
+	StyleSheet,
+	Switch,
+	Text,
+	TouchableOpacity,
+	View,
+} from 'react-native';
+import CurrencySelector from '../components/CurrencySelector';
 // Context and utilities
 import { useCurrency } from '../contexts/CurrencyContext';
-import { useTransactions } from '../contexts/TransactionsContext';
-import { useRecurringTransactions } from '../contexts/RecurringTransactionsContext';
 import { usePeriod } from '../contexts/PeriodContext';
+import { useRecurringTransactions } from '../contexts/RecurringTransactionsContext';
+import { useTransactions } from '../contexts/TransactionsContext';
+import { resetDatabase } from '../database/database';
 import { useBiometricAuth } from '../hooks/useBiometricAuth';
 import * as biometricUtils from '../utils/biometricUtils';
-import * as notificationUtils from '../utils/notificationUtils';
-import { resetDatabase } from '../database/database';
-import { resetAsyncStorage } from '../utils/storageUtils';
-import CurrencySelector from '../components/CurrencySelector';
 import { exportDatabaseData, importDatabaseData } from '../utils/exportUtils';
+import * as notificationUtils from '../utils/notificationUtils';
+import { resetAsyncStorage } from '../utils/storageUtils';
 
 // Components
 const SettingsScreen = () => {
-  // Context hooks
-  const { currentCurrency } = useCurrency();
-  const { transactions, categories, refreshData } = useTransactions();
-  const { transactions: recurringTransactions, refreshTransactions } = useRecurringTransactions();
-  const { resetToCurrentMonth } = usePeriod();
-  const { authenticate } = useBiometricAuth();
+	// Context hooks
+	const { currentCurrency } = useCurrency();
+	const { transactions, categories, refreshData } = useTransactions();
+	const { transactions: recurringTransactions, refreshTransactions } = useRecurringTransactions();
+	const { resetToCurrentMonth } = usePeriod();
+	const { authenticate } = useBiometricAuth();
 
-  // State variables
-  const [darkMode, setDarkMode] = useState(true);
-  const [notifications, setNotifications] = useState(true);
-  const [showCurrencySelector, setShowCurrencySelector] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-  const [isImporting, setIsImporting] = useState(false);
-  const [isTogglingNotifications, setIsTogglingNotifications] = useState(false);
+	// State variables
+	const [_darkMode, _setDarkMode] = useState(true);
+	const [notifications, setNotifications] = useState(true);
+	const [showCurrencySelector, setShowCurrencySelector] = useState(false);
+	const [isResetting, setIsResetting] = useState(false);
+	const [isExporting, setIsExporting] = useState(false);
+	const [isImporting, setIsImporting] = useState(false);
+	const [isTogglingNotifications, setIsTogglingNotifications] = useState(false);
 
-  // Biometric state
-  const [biometricAvailable, setBiometricAvailable] = useState(false);
-  const [biometricEnabled, setBiometricEnabled] = useState(false);
-  const [biometricType, setBiometricType] = useState('Biometric');
+	// Biometric state
+	const [biometricAvailable, setBiometricAvailable] = useState(false);
+	const [biometricEnabled, setBiometricEnabled] = useState(false);
+	const [biometricType, setBiometricType] = useState('Biometric');
 
-  // Check biometric availability
-  useEffect(() => {
-    const checkBiometrics = async () => {
-      try {
-        const available = await biometricUtils.isBiometricAvailable();
-        setBiometricAvailable(available);
+	// Check biometric availability
+	useEffect(() => {
+		const checkBiometrics = async () => {
+			try {
+				const available = await biometricUtils.isBiometricAvailable();
+				setBiometricAvailable(available);
 
-        if (available) {
-          const type = await biometricUtils.getBiometricType();
-          setBiometricType(type);
+				if (available) {
+					const type = await biometricUtils.getBiometricType();
+					setBiometricType(type);
 
-          const enabled = await biometricUtils.isBiometricEnabled();
-          setBiometricEnabled(enabled);
-        }
-      } catch (error) {
-        console.error('Error checking biometrics:', error);
-      }
-    };
+					const enabled = await biometricUtils.isBiometricEnabled();
+					setBiometricEnabled(enabled);
+				}
+			} catch (error) {
+				console.error('Error checking biometrics:', error);
+			}
+		};
 
-    checkBiometrics();
-  }, []);
+		checkBiometrics();
+	}, []);
 
-  // Check notification settings
-  useEffect(() => {
-    const checkNotificationSettings = async () => {
-      try {
-        const enabled = await notificationUtils.areNotificationsEnabled();
-        setNotifications(enabled);
-      } catch (error) {
-        console.error('Error checking notification settings:', error);
-      }
-    };
+	// Check notification settings
+	useEffect(() => {
+		const checkNotificationSettings = async () => {
+			try {
+				const enabled = await notificationUtils.areNotificationsEnabled();
+				setNotifications(enabled);
+			} catch (error) {
+				console.error('Error checking notification settings:', error);
+			}
+		};
 
-    checkNotificationSettings();
-  }, []);
+		checkNotificationSettings();
+	}, []);
 
-  // Helper function to refresh all app data
-  const refreshAppData = async () => {
-    try {
-      // Reset to current month
-      resetToCurrentMonth();
+	// Helper function to refresh all app data
+	const refreshAppData = async () => {
+		try {
+			// Reset to current month
+			resetToCurrentMonth();
 
-      // Refresh transactions data
-      await refreshData();
+			// Refresh transactions data
+			await refreshData();
 
-      // Refresh recurring transactions
-      await refreshTransactions();
-    } catch (error) {
-      console.error('Error refreshing app data:', error);
-    }
-  };
+			// Refresh recurring transactions
+			await refreshTransactions();
+		} catch (error) {
+			console.error('Error refreshing app data:', error);
+		}
+	};
 
-  const toggleNotifications = async () => {
-    try {
-      setIsTogglingNotifications(true);
-      const newValue = !notifications;
+	const toggleNotifications = async () => {
+		try {
+			setIsTogglingNotifications(true);
+			const newValue = !notifications;
 
-      // Save the notification preference
-      await notificationUtils.setNotificationsEnabled(newValue);
+			// Save the notification preference
+			await notificationUtils.setNotificationsEnabled(newValue);
 
-      // If enabling notifications, request permissions and schedule notifications
-      if (newValue) {
-        // Register for push notifications
-        await notificationUtils.registerForPushNotificationsAsync();
+			// If enabling notifications, request permissions and schedule notifications
+			if (newValue) {
+				// Register for push notifications
+				await notificationUtils.registerForPushNotificationsAsync();
 
-        // Get recurring transactions and schedule notifications
-        const allTransactions = recurringTransactions;
-        await notificationUtils.checkAndScheduleNotifications(allTransactions);
-      } else {
-        // If disabling, cancel all notifications
-        await notificationUtils.cancelAllNotifications();
-      }
+				// Get recurring transactions and schedule notifications
+				const allTransactions = recurringTransactions;
+				await notificationUtils.checkAndScheduleNotifications(allTransactions);
+			} else {
+				// If disabling, cancel all notifications
+				await notificationUtils.cancelAllNotifications();
+			}
 
-      setNotifications(newValue);
-    } catch (error) {
-      console.error('Error toggling notifications:', error);
-      Alert.alert('Error', 'Failed to update notification settings.');
-    } finally {
-      setIsTogglingNotifications(false);
-    }
-  };
+			setNotifications(newValue);
+		} catch (error) {
+			console.error('Error toggling notifications:', error);
+			Alert.alert('Error', 'Failed to update notification settings.');
+		} finally {
+			setIsTogglingNotifications(false);
+		}
+	};
 
-  // New function to handle exporting data with biometric authentication
-  const handleExportData = async () => {
-    try {
-      // Show biometric authentication if enabled
-      if (biometricEnabled) {
-        const authenticated = await authenticate(
-          `Authenticate with ${biometricType} to export your data`,
-          async () => {
-            // This runs on successful authentication
-            performExport();
-          },
-          () => {
-            // This runs on authentication failure
-            Alert.alert(
-              "Authentication Failed",
-              "For your security, exporting data requires authentication."
-            );
-          }
-        );
+	// New function to handle exporting data with biometric authentication
+	const handleExportData = async () => {
+		try {
+			// Show biometric authentication if enabled
+			if (biometricEnabled) {
+				const authenticated = await authenticate(
+					`Authenticate with ${biometricType} to export your data`,
+					async () => {
+						// This runs on successful authentication
+						performExport();
+					},
+					() => {
+						// This runs on authentication failure
+						Alert.alert(
+							'Authentication Failed',
+							'For your security, exporting data requires authentication.'
+						);
+					}
+				);
 
-        // If biometrics are not enabled, proceed directly
-        if (!authenticated && !biometricEnabled) {
-          performExport();
-        }
-      } else {
-        // No biometric authentication required
-        performExport();
-      }
-    } catch (error) {
-      console.error('Error during export:', error);
-      setIsExporting(false);
-      Alert.alert(
-        "Export Failed",
-        "There was an error exporting your data. Please try again."
-      );
-    }
-  };
+				// If biometrics are not enabled, proceed directly
+				if (!authenticated && !biometricEnabled) {
+					performExport();
+				}
+			} else {
+				// No biometric authentication required
+				performExport();
+			}
+		} catch (error) {
+			console.error('Error during export:', error);
+			setIsExporting(false);
+			Alert.alert('Export Failed', 'There was an error exporting your data. Please try again.');
+		}
+	};
 
-  // Function to actually perform the export
-  const performExport = async () => {
-    try {
-      setIsExporting(true);
+	// Function to actually perform the export
+	const performExport = async () => {
+		try {
+			setIsExporting(true);
 
-      // Call the export function from utils
-      await exportDatabaseData(
-        transactions,
-        categories,
-        recurringTransactions
-      );
+			// Call the export function from utils
+			await exportDatabaseData(transactions, categories, recurringTransactions);
 
-      setIsExporting(false);
-    } catch (error) {
-      console.error('Error during export:', error);
-      setIsExporting(false);
-      Alert.alert(
-        "Export Failed",
-        "There was an error exporting your data. Please try again."
-      );
-    }
-  };
+			setIsExporting(false);
+		} catch (error) {
+			console.error('Error during export:', error);
+			setIsExporting(false);
+			Alert.alert('Export Failed', 'There was an error exporting your data. Please try again.');
+		}
+	};
 
-  // New function to handle importing data with biometric authentication
-  const handleImportData = async () => {
-    try {
-      // Show confirmation dialog first as import will replace existing data
-      Alert.alert(
-        "Import Data",
-        "This will replace ALL your current data with the imported data. Make sure you have a backup of your current data if needed. Continue?",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Continue",
-            onPress: async () => {
-              // Show biometric authentication if enabled
-              if (biometricEnabled) {
-                const authenticated = await authenticate(
-                  `Authenticate with ${biometricType} to import data`,
-                  async () => {
-                    // This runs on successful authentication
-                    performImport();
-                  },
-                  () => {
-                    // This runs on authentication failure
-                    Alert.alert(
-                      "Authentication Failed",
-                      "For your security, importing data requires authentication."
-                    );
-                  }
-                );
+	// New function to handle importing data with biometric authentication
+	const handleImportData = async () => {
+		try {
+			// Show confirmation dialog first as import will replace existing data
+			Alert.alert(
+				'Import Data',
+				'This will replace ALL your current data with the imported data. Make sure you have a backup of your current data if needed. Continue?',
+				[
+					{ text: 'Cancel', style: 'cancel' },
+					{
+						text: 'Continue',
+						onPress: async () => {
+							// Show biometric authentication if enabled
+							if (biometricEnabled) {
+								const authenticated = await authenticate(
+									`Authenticate with ${biometricType} to import data`,
+									async () => {
+										// This runs on successful authentication
+										performImport();
+									},
+									() => {
+										// This runs on authentication failure
+										Alert.alert(
+											'Authentication Failed',
+											'For your security, importing data requires authentication.'
+										);
+									}
+								);
 
-                // If biometrics are not enabled, proceed directly
-                if (!authenticated && !biometricEnabled) {
-                  performImport();
-                }
-              } else {
-                // No biometric authentication required
-                performImport();
-              }
-            }
-          }
-        ]
-      );
-    } catch (error) {
-      console.error('Error during import:', error);
-      setIsImporting(false);
-      Alert.alert(
-        "Import Failed",
-        "There was an error importing your data. Please try again."
-      );
-    }
-  };
+								// If biometrics are not enabled, proceed directly
+								if (!authenticated && !biometricEnabled) {
+									performImport();
+								}
+							} else {
+								// No biometric authentication required
+								performImport();
+							}
+						},
+					},
+				]
+			);
+		} catch (error) {
+			console.error('Error during import:', error);
+			setIsImporting(false);
+			Alert.alert('Import Failed', 'There was an error importing your data. Please try again.');
+		}
+	};
 
-  // Function to actually perform the import
-  const performImport = async () => {
-    try {
-      setIsImporting(true);
+	// Function to actually perform the import
+	const performImport = async () => {
+		try {
+			setIsImporting(true);
 
-      // Call the import function from utils
-      const result = await importDatabaseData();
+			// Call the import function from utils
+			const result = await importDatabaseData();
 
-      // Show result to user
-      if (result.success) {
-        // Refresh all app data after import
-        await refreshAppData();
+			// Show result to user
+			if (result.success) {
+				// Refresh all app data after import
+				await refreshAppData();
 
-        Alert.alert(
-          "Import Successful",
-          `Your data has been imported successfully.\n\nImported: ${result.stats?.transactions} transactions, ${result.stats?.recurringTransactions} recurring transactions.`
-        );
-      } else {
-        Alert.alert("Import Failed", result.message);
-      }
+				Alert.alert(
+					'Import Successful',
+					`Your data has been imported successfully.\n\nImported: ${result.stats?.transactions} transactions, ${result.stats?.recurringTransactions} recurring transactions.`
+				);
+			} else {
+				Alert.alert('Import Failed', result.message);
+			}
 
-      setIsImporting(false);
-    } catch (error) {
-      console.error('Error during import:', error);
-      setIsImporting(false);
-      Alert.alert(
-        "Import Failed",
-        "There was an error importing your data. Please try again."
-      );
-    }
-  };
+			setIsImporting(false);
+		} catch (error) {
+			console.error('Error during import:', error);
+			setIsImporting(false);
+			Alert.alert('Import Failed', 'There was an error importing your data. Please try again.');
+		}
+	};
 
-  const handleCurrencySelection = () => {
-    setShowCurrencySelector(true);
-  };
+	const handleCurrencySelection = () => {
+		setShowCurrencySelector(true);
+	};
 
-  const handleResetData = async () => {
-    Alert.alert(
-      "Reset All Data",
-      "This will delete all your expenses and categories. This action cannot be undone. Are you sure?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Reset",
-          style: "destructive",
-          onPress: async () => {
-            // First authenticate with biometrics if available and enabled
-            await authenticate(
-              "Authenticate to reset all data",
-              async () => {
-                // This code runs after successful authentication
-                try {
-                  // Show loading indicator
-                  setIsResetting(true);
+	const handleResetData = async () => {
+		Alert.alert(
+			'Reset All Data',
+			'This will delete all your expenses and categories. This action cannot be undone. Are you sure?',
+			[
+				{ text: 'Cancel', style: 'cancel' },
+				{
+					text: 'Reset',
+					style: 'destructive',
+					onPress: async () => {
+						// First authenticate with biometrics if available and enabled
+						await authenticate(
+							'Authenticate to reset all data',
+							async () => {
+								// This code runs after successful authentication
+								try {
+									// Show loading indicator
+									setIsResetting(true);
 
-                  // Reset database
-                  await resetDatabase();
+									// Reset database
+									await resetDatabase();
 
-                  // Reset AsyncStorage but preserve biometric settings
-                  await resetAsyncStorage(['@expensify_biometric_enabled']);
+									// Reset AsyncStorage but preserve biometric settings
+									await resetAsyncStorage(['@spendr_biometric_enabled']);
 
-                  // Refresh all app data
-                  await refreshAppData();
+									// Refresh all app data
+									await refreshAppData();
 
-                  // Hide loading indicator
-                  setIsResetting(false);
+									// Hide loading indicator
+									setIsResetting(false);
 
-                  // Show success message
-                  Alert.alert(
-                    "Data Reset",
-                    "All transactions, budgets, and settings have been reset successfully.",
-                    [
-                      {
-                        onPress: () => {
-                          // Route the user to onboarding
-                          router.push('/onboarding')
-                        }
-                      }
-                    ]
-                  );
+									// Show success message
+									Alert.alert(
+										'Data Reset',
+										'All transactions, budgets, and settings have been reset successfully.',
+										[
+											{
+												onPress: () => {
+													// Route the user to onboarding
+													router.push('/onboarding');
+												},
+											},
+										]
+									);
+								} catch (error) {
+									console.error('Error resetting data:', error);
+									setIsResetting(false);
+									Alert.alert(
+										'Reset Failed',
+										'There was an error resetting your data. Please try again.'
+									);
+								}
+							},
+							() => {
+								// This runs if authentication fails
+								Alert.alert(
+									'Authentication Failed',
+									'For your security, data reset requires authentication.'
+								);
+							}
+						);
+					},
+				},
+			]
+		);
+	};
 
-                } catch (error) {
-                  console.error('Error resetting data:', error);
-                  setIsResetting(false);
-                  Alert.alert(
-                    "Reset Failed",
-                    "There was an error resetting your data. Please try again."
-                  );
-                }
-              },
-              () => {
-                // This runs if authentication fails
-                Alert.alert(
-                  "Authentication Failed",
-                  "For your security, data reset requires authentication."
-                );
-              }
-            );
-          }
-        }
-      ]
-    );
-  };
+	const handleAbout = () => {
+		Alert.alert(
+			'About Spendr',
+			'Spendr is a personal finance tracker that helps you manage expenses, set budgets, and track recurring transactions. All your financial data is stored securely on your device.',
+			[{ text: 'OK' }]
+		);
+	};
 
-  const handleAbout = () => {
-    Alert.alert(
-      "About Expensify",
-      "Expensify is a personal finance tracker that helps you manage expenses, set budgets, and track recurring transactions. All your financial data is stored securely on your device.",
-      [{ text: "OK" }]
-    );
-  };
+	const handlePrivacyPolicy = () => {
+		router.push('/screens/PrivacyPolicyScreen');
+	};
 
-  const handlePrivacyPolicy = () => {
-    router.push('/screens/PrivacyPolicyScreen')
-  };
+	// Add biometric toggle function
+	const toggleBiometricAuth = async (value: boolean) => {
+		if (value && biometricAvailable) {
+			// Verify with biometrics before enabling
+			const success = await biometricUtils.authenticateWithBiometrics(
+				`Authenticate to ${value ? 'enable' : 'disable'} ${biometricType} authentication`
+			);
 
-  // Add biometric toggle function
-  const toggleBiometricAuth = async (value: boolean) => {
-    if (value && biometricAvailable) {
-      // Verify with biometrics before enabling
-      const success = await biometricUtils.authenticateWithBiometrics(
-        `Authenticate to ${value ? 'enable' : 'disable'} ${biometricType} authentication`
-      );
+			if (success) {
+				await biometricUtils.setBiometricEnabled(value);
+				setBiometricEnabled(value);
+			} else {
+				// If authentication fails, revert the switch
+				setBiometricEnabled(!value);
+			}
+		} else {
+			// When disabling, no need to authenticate first
+			await biometricUtils.setBiometricEnabled(value);
+			setBiometricEnabled(value);
+		}
+	};
 
-      if (success) {
-        await biometricUtils.setBiometricEnabled(value);
-        setBiometricEnabled(value);
-      } else {
-        // If authentication fails, revert the switch
-        setBiometricEnabled(!value);
-      }
-    } else {
-      // When disabling, no need to authenticate first
-      await biometricUtils.setBiometricEnabled(value);
-      setBiometricEnabled(value);
-    }
-  };
+	const renderSettingsItem = (
+		icon: string,
+		title: string,
+		onPress: () => void,
+		rightElement?: React.ReactNode
+	) => {
+		return (
+			<TouchableOpacity style={styles.settingItem} onPress={onPress}>
+				<View style={styles.settingLeft}>
+					{/* biome-ignore lint/suspicious/noExplicitAny: external API shape unknown */}
+					<Ionicons name={icon as any} size={22} color="#15E8FE" style={styles.settingIcon} />
+					<Text style={styles.settingTitle}>{title}</Text>
+				</View>
+				{rightElement ? (
+					rightElement
+				) : (
+					<Ionicons name="chevron-forward" size={20} color="rgba(255, 255, 255, 0.5)" />
+				)}
+			</TouchableOpacity>
+		);
+	};
 
-  const renderSettingsItem = (
-    icon: string,
-    title: string,
-    onPress: () => void,
-    rightElement?: React.ReactNode
-  ) => {
-    return (
-      <TouchableOpacity style={styles.settingItem} onPress={onPress}>
-        <View style={styles.settingLeft}>
-          {/* biome-ignore lint/suspicious/noExplicitAny: <explanation> */}
-          <Ionicons name={icon as any} size={22} color="#15E8FE" style={styles.settingIcon} />
-          <Text style={styles.settingTitle}>{title}</Text>
-        </View>
-        {rightElement ? (
-          rightElement
-        ) : (
-          <Ionicons name="chevron-forward" size={20} color="rgba(255, 255, 255, 0.5)" />
-        )}
-      </TouchableOpacity>
-    );
-  };
+	return (
+		<SafeAreaView style={styles.container}>
+			<Stack.Screen
+				options={{
+					title: 'Settings',
+					headerStyle: {
+						backgroundColor: '#1A1A1A',
+					},
+					headerTintColor: '#FFFFFF',
+					headerShadowVisible: false,
+				}}
+			/>
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <Stack.Screen
-        options={{
-          title: 'Settings',
-          headerStyle: {
-            backgroundColor: '#1A1A1A',
-          },
-          headerTintColor: '#FFFFFF',
-          headerShadowVisible: false,
-        }}
-      />
+			<View style={styles.headerContainer}>
+				<Text style={styles.headerTitle}>App Settings</Text>
+			</View>
 
-      <View style={styles.headerContainer}>
-        <Text style={styles.headerTitle}>App Settings</Text>
-      </View>
+			{/* Wrap the content in a ScrollView */}
+			<ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+				{/* Preferences */}
+				<View style={styles.section}>
+					<Text style={styles.sectionTitle}>Preferences</Text>
+					{renderSettingsItem(
+						'notifications',
+						'Notifications',
+						toggleNotifications,
+						isTogglingNotifications ? (
+							<ActivityIndicator size="small" color="#15E8FE" />
+						) : (
+							<Switch
+								value={notifications}
+								onValueChange={toggleNotifications}
+								trackColor={{ false: '#3e3e3e', true: 'rgba(80, 171, 227, 0.3)' }}
+								thumbColor={notifications ? '#15E8FE' : '#f4f3f4'}
+								ios_backgroundColor="#3e3e3e"
+								disabled={isTogglingNotifications}
+							/>
+						)
+					)}
+					{renderSettingsItem(
+						'cash-outline',
+						'Currency',
+						handleCurrencySelection,
+						<View style={styles.currencyValue}>
+							<Text style={styles.currencySymbol}>{currentCurrency.symbol}</Text>
+							<Text style={styles.currencyCode}>{currentCurrency.code}</Text>
+						</View>
+					)}
+				</View>
 
-      {/* Wrap the content in a ScrollView */}
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+				{/* Security Section with Biometrics */}
+				<View style={styles.section}>
+					<Text style={styles.sectionTitle}>Security</Text>
 
-        {/* Preferences */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Preferences</Text>
-          {renderSettingsItem(
-            'notifications',
-            'Notifications',
-            toggleNotifications,
-            isTogglingNotifications ? (
-              <ActivityIndicator size="small" color="#15E8FE" />
-            ) : (
-              <Switch
-                value={notifications}
-                onValueChange={toggleNotifications}
-                trackColor={{ false: '#3e3e3e', true: 'rgba(80, 171, 227, 0.3)' }}
-                thumbColor={notifications ? '#15E8FE' : '#f4f3f4'}
-                ios_backgroundColor="#3e3e3e"
-                disabled={isTogglingNotifications}
-              />
-            )
-          )}
-          {renderSettingsItem(
-            'cash-outline',
-            'Currency',
-            handleCurrencySelection,
-            <View style={styles.currencyValue}>
-              <Text style={styles.currencySymbol}>{currentCurrency.symbol}</Text>
-              <Text style={styles.currencyCode}>{currentCurrency.code}</Text>
-            </View>
-          )}
-        </View>
+					{biometricAvailable
+						? renderSettingsItem(
+								biometricType === 'Face ID' ? 'scan-face' : 'finger-print',
+								`${biometricType} Authentication`,
+								() => toggleBiometricAuth(!biometricEnabled),
+								<Switch
+									value={biometricEnabled}
+									onValueChange={toggleBiometricAuth}
+									trackColor={{ false: '#3e3e3e', true: 'rgba(80, 171, 227, 0.3)' }}
+									thumbColor={biometricEnabled ? '#15E8FE' : '#f4f3f4'}
+									ios_backgroundColor="#3e3e3e"
+								/>
+							)
+						: renderSettingsItem(
+								'lock-closed',
+								'Biometric Authentication',
+								() =>
+									Alert.alert(
+										'Not Available',
+										'Biometric authentication is not available on this device.'
+									),
+								<Text style={styles.settingUnavailableText}>Unavailable</Text>
+							)}
 
-        {/* Security Section with Biometrics */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Security</Text>
+					{renderSettingsItem('shield-checkmark', 'Privacy Policy', handlePrivacyPolicy)}
+				</View>
 
-          {biometricAvailable ? (
-            renderSettingsItem(
-              biometricType === 'Face ID' ? 'scan-face' : 'finger-print',
-              `${biometricType} Authentication`,
-              () => toggleBiometricAuth(!biometricEnabled),
-              <Switch
-                value={biometricEnabled}
-                onValueChange={toggleBiometricAuth}
-                trackColor={{ false: '#3e3e3e', true: 'rgba(80, 171, 227, 0.3)' }}
-                thumbColor={biometricEnabled ? '#15E8FE' : '#f4f3f4'}
-                ios_backgroundColor="#3e3e3e"
-              />
-            )
-          ) : (
-            renderSettingsItem(
-              'lock-closed',
-              'Biometric Authentication',
-              () => Alert.alert('Not Available', 'Biometric authentication is not available on this device.'),
-              <Text style={styles.settingUnavailableText}>Unavailable</Text>
-            )
-          )}
+				{/* Data Management */}
+				<View style={styles.section}>
+					<Text style={styles.sectionTitle}>Data Management</Text>
+					{renderSettingsItem(
+						'download-outline',
+						'Export Data',
+						handleExportData,
+						isExporting ? <ActivityIndicator size="small" color="#15E8FE" /> : undefined
+					)}
+					{renderSettingsItem(
+						'cloud-upload-outline',
+						'Import Data',
+						handleImportData,
+						isImporting ? <ActivityIndicator size="small" color="#15E8FE" /> : undefined
+					)}
+					{renderSettingsItem(
+						'trash-outline',
+						'Reset All Data',
+						handleResetData,
+						isResetting ? <ActivityIndicator size="small" color="#FF6B6B" /> : undefined
+					)}
+				</View>
 
-          {renderSettingsItem(
-            'shield-checkmark',
-            'Privacy Policy',
-            handlePrivacyPolicy,
-          )}
+				{/* About */}
+				<View style={styles.section}>
+					<Text style={styles.sectionTitle}>About</Text>
+					{renderSettingsItem('information-circle-outline', 'About Spendr', handleAbout)}
+				</View>
 
-        </View>
+				<Text style={styles.versionText}>Version 1.0.0</Text>
+			</ScrollView>
 
-        {/* Data Management */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Data Management</Text>
-          {renderSettingsItem(
-            'download-outline',
-            'Export Data',
-            handleExportData,
-            isExporting ? (
-              <ActivityIndicator size="small" color="#15E8FE" />
-            ) : undefined
-          )}
-          {renderSettingsItem(
-            'cloud-upload-outline',
-            'Import Data',
-            handleImportData,
-            isImporting ? (
-              <ActivityIndicator size="small" color="#15E8FE" />
-            ) : undefined
-          )}
-          {renderSettingsItem(
-            'trash-outline',
-            'Reset All Data',
-            handleResetData,
-            isResetting ? (
-              <ActivityIndicator size="small" color="#FF6B6B" />
-            ) : undefined
-          )}
-        </View>
-
-        {/* About */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
-          {renderSettingsItem('information-circle-outline', 'About Expensify', handleAbout)}
-        </View>
-
-        <Text style={styles.versionText}>Version 1.0.0</Text>
-      </ScrollView>
-
-      <CurrencySelector
-        isVisible={showCurrencySelector}
-        onClose={() => setShowCurrencySelector(false)}
-      />
-
-    </SafeAreaView>
-  );
+			<CurrencySelector
+				isVisible={showCurrencySelector}
+				onClose={() => setShowCurrencySelector(false)}
+			/>
+		</SafeAreaView>
+	);
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#121212',
-  },
-  headerContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    paddingTop: 60, // Adjust this if needed based on your app's status bar
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  content: {
-    flex: 1,
-    padding: 16,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#15E8FE',
-    marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  settingLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  settingIcon: {
-    marginRight: 12,
-  },
-  settingTitle: {
-    fontSize: 16,
-    color: '#FFFFFF',
-  },
-  currencyValue: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  currencySymbol: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#15E8FE',
-    marginRight: 4,
-  },
-  currencyCode: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.6)',
-  },
-  versionText: {
-    textAlign: 'center',
-    color: 'rgba(255, 255, 255, 0.5)',
-    marginTop: 24,
-    marginBottom: 64
-  },
-  settingUnavailableText: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.4)',
-    fontStyle: 'italic',
-  },
+	container: {
+		flex: 1,
+		backgroundColor: '#121212',
+	},
+	headerContainer: {
+		paddingHorizontal: 16,
+		paddingVertical: 12,
+		paddingTop: 60, // Adjust this if needed based on your app's status bar
+	},
+	headerTitle: {
+		fontSize: 24,
+		fontWeight: '700',
+		color: '#FFFFFF',
+		marginBottom: 4,
+	},
+	content: {
+		flex: 1,
+		padding: 16,
+	},
+	section: {
+		marginBottom: 24,
+	},
+	sectionTitle: {
+		fontSize: 14,
+		fontWeight: '600',
+		color: '#15E8FE',
+		marginBottom: 8,
+		textTransform: 'uppercase',
+		letterSpacing: 1,
+	},
+	settingItem: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'space-between',
+		paddingVertical: 12,
+		borderBottomWidth: 1,
+		borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+	},
+	settingLeft: {
+		flexDirection: 'row',
+		alignItems: 'center',
+	},
+	settingIcon: {
+		marginRight: 12,
+	},
+	settingTitle: {
+		fontSize: 16,
+		color: '#FFFFFF',
+	},
+	currencyValue: {
+		flexDirection: 'row',
+		alignItems: 'center',
+	},
+	currencySymbol: {
+		fontSize: 16,
+		fontWeight: '600',
+		color: '#15E8FE',
+		marginRight: 4,
+	},
+	currencyCode: {
+		fontSize: 14,
+		color: 'rgba(255, 255, 255, 0.6)',
+	},
+	versionText: {
+		textAlign: 'center',
+		color: 'rgba(255, 255, 255, 0.5)',
+		marginTop: 24,
+		marginBottom: 64,
+	},
+	settingUnavailableText: {
+		fontSize: 14,
+		color: 'rgba(255, 255, 255, 0.4)',
+		fontStyle: 'italic',
+	},
 });
 
 export default SettingsScreen;

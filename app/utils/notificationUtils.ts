@@ -1,284 +1,274 @@
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
-import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import type { RecurringTransaction } from '../database/schema';
 import { formatCurrency } from './currencyUtils';
 
 // Keys for storing notification settings
-const NOTIFICATIONS_ENABLED_KEY = '@expensify_notifications_enabled';
-const PUSH_TOKEN_KEY = '@expensify_push_token';
-const SCHEDULED_NOTIFICATIONS_KEY = '@expensify_scheduled_notifications';
+const NOTIFICATIONS_ENABLED_KEY = '@spendr_notifications_enabled';
+const PUSH_TOKEN_KEY = '@spendr_push_token';
+const SCHEDULED_NOTIFICATIONS_KEY = '@spendr_scheduled_notifications';
 
-// Configure default notification behavior
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: false,
-    shouldSetBadge: true,
-  }),
-});
+// Lazy-load expo-notifications to avoid crashing in Expo Go (SDK 53+
+// removed remote notifications from Expo Go on Android).
+type NotificationsModule = typeof import('expo-notifications');
+let _notifications: NotificationsModule | null = null;
+
+const getNotifications = (): NotificationsModule | null => {
+	if (_notifications !== null) return _notifications;
+	try {
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		_notifications = require('expo-notifications') as NotificationsModule;
+		// Configure default notification behaviour on first successful load
+		_notifications.setNotificationHandler({
+			handleNotification: async () => ({
+				shouldShowAlert: true,
+				shouldPlaySound: false,
+				shouldSetBadge: true,
+				shouldShowBanner: true,
+				shouldShowList: true,
+			}),
+		});
+		return _notifications;
+	} catch {
+		return null;
+	}
+};
 
 /**
- * Register for push notifications and store the token
+ * Register for push notifications and store the token.
+ * Returns null silently when running in Expo Go.
  */
 export const registerForPushNotificationsAsync = async (): Promise<string | null> => {
-  // biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
-  let token;
+	const Notifications = getNotifications();
+	if (!Notifications) return null;
 
-  try {
-    if (Platform.OS === 'android') {
-      // Set notification channel for Android
-      await Notifications.setNotificationChannelAsync('default', {
-        name: 'Default',
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#15E8FE',
-      });
+	let token: string | null = null;
 
-      // Create a recurring transactions channel for Android
-      await Notifications.setNotificationChannelAsync('recurring-transactions', {
-        name: 'Recurring Transactions',
-        description: 'Notifications for upcoming recurring transactions',
-        importance: Notifications.AndroidImportance.HIGH,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#15E8FE',
-      });
-    }
+	try {
+		if (Platform.OS === 'android') {
+			await Notifications.setNotificationChannelAsync('default', {
+				name: 'Default',
+				importance: Notifications.AndroidImportance.MAX,
+				vibrationPattern: [0, 250, 250, 250],
+				lightColor: '#15E8FE',
+			});
 
-    if (Device.isDevice) {
-      // Check if we already have permission
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
+			await Notifications.setNotificationChannelAsync('recurring-transactions', {
+				name: 'Recurring Transactions',
+				description: 'Notifications for upcoming recurring transactions',
+				importance: Notifications.AndroidImportance.HIGH,
+				vibrationPattern: [0, 250, 250, 250],
+				lightColor: '#15E8FE',
+			});
+		}
 
-      // If we don't have permission, ask for it
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
+		if (Device.isDevice) {
+			const { status: existingStatus } = await Notifications.getPermissionsAsync();
+			let finalStatus = existingStatus;
 
-      // If we still don't have permission, acknowledge and continue
-      if (finalStatus !== 'granted') {
-        console.log('Notification permissions not granted');
-        return null;
-      }
+			if (existingStatus !== 'granted') {
+				const { status } = await Notifications.requestPermissionsAsync();
+				finalStatus = status;
+			}
 
-      // Get the token
-      token = (await Notifications.getExpoPushTokenAsync({
-        projectId: Constants.expoConfig?.extra?.eas?.projectId,
-      })).data;
+			if (finalStatus !== 'granted') {
+				console.log('Notification permissions not granted');
+				return null;
+			}
 
-      // Store the token
-      await AsyncStorage.setItem(PUSH_TOKEN_KEY, token);
-    } else {
-      console.log('Must use physical device for Push Notifications');
-    }
+			token = (await Notifications.getExpoPushTokenAsync()).data ?? null;
 
-    return token;
-  } catch (error) {
-    // Handle any errors gracefully
-    console.error('Error in registerForPushNotificationsAsync:', error);
-    return null;
-  }
+			if (token) {
+				await AsyncStorage.setItem(PUSH_TOKEN_KEY, token);
+			}
+		} else {
+			console.log('Must use physical device for Push Notifications');
+		}
+
+		return token;
+	} catch (error) {
+		console.error('Error in registerForPushNotificationsAsync:', error);
+		return null;
+	}
 };
 
 /**
  * Check if notifications are enabled in app settings
  */
 export const areNotificationsEnabled = async (): Promise<boolean> => {
-  try {
-    const value = await AsyncStorage.getItem(NOTIFICATIONS_ENABLED_KEY);
-    // Default to true if not set
-    return value === null ? true : value === 'true';
-  } catch (error) {
-    console.error('Error checking notification settings:', error);
-    return false;
-  }
+	try {
+		const value = await AsyncStorage.getItem(NOTIFICATIONS_ENABLED_KEY);
+		return value === null ? true : value === 'true';
+	} catch (error) {
+		console.error('Error checking notification settings:', error);
+		return false;
+	}
 };
 
 /**
  * Enable or disable notifications in app settings
  */
 export const setNotificationsEnabled = async (enabled: boolean): Promise<void> => {
-  try {
-    await AsyncStorage.setItem(NOTIFICATIONS_ENABLED_KEY, enabled ? 'true' : 'false');
-  } catch (error) {
-    console.error('Error saving notification settings:', error);
-  }
+	try {
+		await AsyncStorage.setItem(NOTIFICATIONS_ENABLED_KEY, enabled ? 'true' : 'false');
+	} catch (error) {
+		console.error('Error saving notification settings:', error);
+	}
 };
 
-/**
- * Generate a unique identifier for a transaction notification
- */
 const getNotificationIdentifier = (transactionId: string): string => {
-  return `transaction_${transactionId}`;
+	return `transaction_${transactionId}`;
 };
 
 /**
- * Schedule a notification for an upcoming recurring transaction
+ * Schedule a notification for an upcoming recurring transaction.
+ * No-ops silently when running in Expo Go.
  */
 export const scheduleTransactionNotification = async (
-  transaction: RecurringTransaction,
-  dueDate: Date
+	transaction: RecurringTransaction,
+	dueDate: Date
 ): Promise<string | null> => {
-  try {
-    // Check if notifications are enabled
-    const isEnabled = await areNotificationsEnabled();
-    if (!isEnabled) {
-      return null;
-    }
+	const Notifications = getNotifications();
+	if (!Notifications) return null;
 
-    // Check if we've already scheduled this notification
-    const scheduledNotifications = await getScheduledNotifications();
-    if (scheduledNotifications[transaction.id]) {
-      // Already scheduled, don't schedule again
-      return null;
-    }
+	try {
+		const isEnabled = await areNotificationsEnabled();
+		if (!isEnabled) return null;
 
-    // Calculate notification time (24 hours before due date)
-    const notificationDate = new Date(dueDate);
-    notificationDate.setDate(notificationDate.getDate() - 1);
+		const scheduledNotifications = await getScheduledNotifications();
+		if (scheduledNotifications[transaction.id]) return null;
 
-    // Don't schedule if the notification time is in the past
-    if (notificationDate < new Date()) {
-      return null;
-    }
+		const notificationDate = new Date(dueDate);
+		notificationDate.setDate(notificationDate.getDate() - 1);
 
-    // Format transaction amount
-    const amount = formatCurrency(transaction.amount);
+		if (notificationDate < new Date()) return null;
 
-    // Create notification content
-    const content = {
-      title: transaction.isIncome ? 'Upcoming Income' : 'Upcoming Expense',
-      body: `${transaction.note || 'Recurring transaction'} - ${amount} due tomorrow`,
-      data: { transactionId: transaction.id },
-      sound: true,
-    };
+		const amount = formatCurrency(transaction.amount);
 
-    // Get a unique identifier for this notification
-    const identifier = getNotificationIdentifier(transaction.id);
+		const content = {
+			title: transaction.isIncome ? 'Upcoming Income' : 'Upcoming Expense',
+			body: `${transaction.note || 'Recurring transaction'} - ${amount} due tomorrow`,
+			data: { transactionId: transaction.id },
+			sound: true,
+		};
 
-    // Cancel any existing notification for this transaction
-    await cancelTransactionNotification(transaction.id);
+		const identifier = getNotificationIdentifier(transaction.id);
+		await cancelTransactionNotification(transaction.id);
 
-    // Schedule the notification
-    const notificationId = await Notifications.scheduleNotificationAsync({
-      content,
-      trigger: {
-        date: notificationDate,
-        channelId: Platform.OS === 'android' ? 'recurring-transactions' : undefined,
-      },
-      identifier,
-    });
+		const notificationId = await Notifications.scheduleNotificationAsync({
+			content,
+			trigger: {
+				type: Notifications.SchedulableTriggerInputTypes.DATE,
+				date: notificationDate,
+				channelId: Platform.OS === 'android' ? 'recurring-transactions' : undefined,
+			},
+			identifier,
+		});
 
-    // Mark this notification as scheduled
-    await markNotificationScheduled(transaction.id);
-
-    return notificationId;
-  } catch (error) {
-    console.error('Error scheduling transaction notification:', error);
-    return null;
-  }
+		await markNotificationScheduled(transaction.id);
+		return notificationId;
+	} catch (error) {
+		console.error('Error scheduling transaction notification:', error);
+		return null;
+	}
 };
 
 /**
- * Cancel a scheduled notification for a transaction
+ * Cancel a scheduled notification for a transaction.
  */
 export const cancelTransactionNotification = async (transactionId: string): Promise<void> => {
-  try {
-    const identifier = getNotificationIdentifier(transactionId);
-    await Notifications.cancelScheduledNotificationAsync(identifier);
+	const Notifications = getNotifications();
+	if (!Notifications) return;
 
-    // Clear the scheduled notification marker
-    await clearScheduledNotification(transactionId);
-  } catch (error) {
-    console.error('Error canceling transaction notification:', error);
-  }
+	try {
+		const identifier = getNotificationIdentifier(transactionId);
+		await Notifications.cancelScheduledNotificationAsync(identifier);
+		await clearScheduledNotification(transactionId);
+	} catch (error) {
+		console.error('Error canceling transaction notification:', error);
+	}
 };
 
 /**
- * Check for upcoming transactions and schedule notifications
+ * Check for upcoming transactions and schedule notifications.
  */
 export const checkAndScheduleNotifications = async (
-  transactions: RecurringTransaction[]
+	transactions: RecurringTransaction[]
 ): Promise<void> => {
-  try {
-    // Check if notifications are enabled
-    const isEnabled = await areNotificationsEnabled();
-    if (!isEnabled) {
-      return;
-    }
+	if (!getNotifications()) return;
 
-    const now = new Date();
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+	try {
+		const isEnabled = await areNotificationsEnabled();
+		if (!isEnabled) return;
 
-    // Look for transactions with nextDue dates in the near future
-    for (const transaction of transactions) {
-      if (!transaction.active || !transaction.nextDue) {
-        continue;
-      }
+		const now = new Date();
+		const thirtyDaysFromNow = new Date();
+		thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
-      const dueDate = new Date(transaction.nextDue);
+		for (const transaction of transactions) {
+			if (!transaction.active || !transaction.nextDue) continue;
 
-      // Only schedule if due date is within the next 30 days
-      if (dueDate >= now && dueDate <= thirtyDaysFromNow) {
-        await scheduleTransactionNotification(transaction, dueDate);
-      }
-    }
-  } catch (error) {
-    console.error('Error checking and scheduling notifications:', error);
-  }
+			const dueDate = new Date(transaction.nextDue);
+			if (dueDate >= now && dueDate <= thirtyDaysFromNow) {
+				await scheduleTransactionNotification(transaction, dueDate);
+			}
+		}
+	} catch (error) {
+		console.error('Error checking and scheduling notifications:', error);
+	}
 };
 
 /**
- * Cancel all scheduled notifications
+ * Cancel all scheduled notifications.
  */
 export const cancelAllNotifications = async (): Promise<void> => {
-  try {
-    await Notifications.cancelAllScheduledNotificationsAsync();
-  } catch (error) {
-    console.error('Error canceling all notifications:', error);
-  }
+	const Notifications = getNotifications();
+	if (!Notifications) return;
+
+	try {
+		await Notifications.cancelAllScheduledNotificationsAsync();
+	} catch (error) {
+		console.error('Error canceling all notifications:', error);
+	}
 };
 
 const getScheduledNotifications = async (): Promise<Record<string, boolean>> => {
-  try {
-    const value = await AsyncStorage.getItem(SCHEDULED_NOTIFICATIONS_KEY);
-    return value ? JSON.parse(value) : {};
-  } catch (error) {
-    console.error('Error getting scheduled notifications:', error);
-    return {};
-  }
+	try {
+		const value = await AsyncStorage.getItem(SCHEDULED_NOTIFICATIONS_KEY);
+		return value ? JSON.parse(value) : {};
+	} catch (error) {
+		console.error('Error getting scheduled notifications:', error);
+		return {};
+	}
 };
 
 const markNotificationScheduled = async (transactionId: string): Promise<void> => {
-  try {
-    const scheduled = await getScheduledNotifications();
-    scheduled[transactionId] = true;
-    await AsyncStorage.setItem(SCHEDULED_NOTIFICATIONS_KEY, JSON.stringify(scheduled));
-  } catch (error) {
-    console.error('Error marking notification as scheduled:', error);
-  }
+	try {
+		const scheduled = await getScheduledNotifications();
+		scheduled[transactionId] = true;
+		await AsyncStorage.setItem(SCHEDULED_NOTIFICATIONS_KEY, JSON.stringify(scheduled));
+	} catch (error) {
+		console.error('Error marking notification as scheduled:', error);
+	}
 };
 
 const clearScheduledNotification = async (transactionId: string): Promise<void> => {
-  try {
-    const scheduled = await getScheduledNotifications();
-    delete scheduled[transactionId];
-    await AsyncStorage.setItem(SCHEDULED_NOTIFICATIONS_KEY, JSON.stringify(scheduled));
-  } catch (error) {
-    console.error('Error clearing scheduled notification:', error);
-  }
+	try {
+		const scheduled = await getScheduledNotifications();
+		delete scheduled[transactionId];
+		await AsyncStorage.setItem(SCHEDULED_NOTIFICATIONS_KEY, JSON.stringify(scheduled));
+	} catch (error) {
+		console.error('Error clearing scheduled notification:', error);
+	}
 };
 
 export default {
-  registerForPushNotificationsAsync,
-  areNotificationsEnabled,
-  setNotificationsEnabled,
-  scheduleTransactionNotification,
-  cancelTransactionNotification,
-  checkAndScheduleNotifications,
-  cancelAllNotifications,
+	registerForPushNotificationsAsync,
+	areNotificationsEnabled,
+	setNotificationsEnabled,
+	scheduleTransactionNotification,
+	cancelTransactionNotification,
+	checkAndScheduleNotifications,
+	cancelAllNotifications,
 };
