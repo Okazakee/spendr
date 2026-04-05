@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
 	Alert,
 	FlatList,
@@ -19,6 +20,7 @@ import { formatCurrency } from '../utils/currencyUtils';
 
 const TransactionsScreen = () => {
 	const _router = useRouter();
+	const { t } = useTranslation();
 	const { transactions, isLoading, refreshTransactions, removeTransaction, processTransactions } =
 		useRecurringTransactions();
 	const { categories } = useTransactions();
@@ -28,7 +30,6 @@ const TransactionsScreen = () => {
 	const [selectedTransaction, setSelectedTransaction] = useState<RecurringTransaction | null>(null);
 	const [refreshing, setRefreshing] = useState(false);
 
-	// Process recurring transactions when the screen loads
 	// biome-ignore lint/correctness/useExhaustiveDependencies: intentional one-time effect
 	useEffect(() => {
 		const checkAndProcessTransactions = async () => {
@@ -73,26 +74,25 @@ const TransactionsScreen = () => {
 	};
 
 	const handleDeleteTransaction = (id: string) => {
-		Alert.alert(
-			'Delete Transaction',
-			'Are you sure you want to delete this recurring transaction?',
-			[
-				{ text: 'Cancel', style: 'cancel' },
-				{
-					text: 'Delete',
-					style: 'destructive',
-					onPress: async () => {
-						try {
-							await removeTransaction(id);
-						} catch (error) {
-							console.error('Failed to delete transaction:', error);
-							Alert.alert('Error', 'Failed to delete transaction.');
-						}
-					},
+		Alert.alert(t('transactions.deleteTitle'), t('transactions.deleteMsg'), [
+			{ text: t('transactions.cancel'), style: 'cancel' },
+			{
+				text: t('transactions.delete'),
+				style: 'destructive',
+				onPress: async () => {
+					try {
+						await removeTransaction(id);
+					} catch (error) {
+						console.error('Failed to delete transaction:', error);
+						Alert.alert(t('transactions.error'), t('transactions.failedDelete'));
+					}
 				},
-			]
-		);
+			},
+		]);
 	};
+
+	const monthKeys = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'] as const;
+	const weekdayKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
 
 	const renderTransactionItem = ({ item }: { item: RecurringTransaction }) => {
 		const iconName = item.isIncome ? 'arrow-down-circle' : 'arrow-up-circle';
@@ -100,42 +100,30 @@ const TransactionsScreen = () => {
 		const amountPrefix = item.isIncome ? '+ ' : '- ';
 		const amountColor = item.isIncome ? '#15E8FE' : '#FF6B6B';
 
-		// Get category name for expense transactions
 		let categoryName = '';
 		if (!item.isIncome && item.category) {
 			const category = categories.find((c) => c.id === item.category);
 			if (category) categoryName = category.name;
 		}
 
-		// Get recurrence text with details
 		let recurrenceText = '';
 		if (item.recurrenceType === 'monthly') {
-			recurrenceText = `Monthly (Day ${item.day})`;
+			recurrenceText = t('transactions.monthly', { day: item.day });
 		} else if (item.recurrenceType === 'yearly') {
-			const monthNames = [
-				'Jan',
-				'Feb',
-				'Mar',
-				'Apr',
-				'May',
-				'Jun',
-				'Jul',
-				'Aug',
-				'Sep',
-				'Oct',
-				'Nov',
-				'Dec',
-			];
-			const monthName =
-				item.month && item.month >= 1 && item.month <= 12 ? monthNames[item.month - 1] : '';
-			recurrenceText = `Yearly (${monthName} ${item.day})`;
+			const monthKey = item.month && item.month >= 1 && item.month <= 12
+				? monthKeys[item.month - 1]
+				: 'jan';
+			recurrenceText = t('transactions.yearly', {
+				month: t(`transactions.months.${monthKey}`),
+				day: item.day,
+			});
 		} else if (item.recurrenceType === 'weekly') {
-			const weekdayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-			const weekdayName =
-				item.weekday && item.weekday >= 1 && item.weekday <= 7
-					? weekdayNames[item.weekday - 1]
-					: '';
-			recurrenceText = `Weekly (${weekdayName})`;
+			const weekdayKey = item.weekday && item.weekday >= 1 && item.weekday <= 7
+				? weekdayKeys[item.weekday - 1]
+				: 'mon';
+			recurrenceText = t('transactions.weekly', {
+				weekday: t(`transactions.weekdays.${weekdayKey}`),
+			});
 		}
 
 		return (
@@ -181,20 +169,16 @@ const TransactionsScreen = () => {
 		<SafeAreaView style={styles.container}>
 			<Stack.Screen
 				options={{
-					title: 'Recurring Transactions',
-					headerStyle: {
-						backgroundColor: '#1A1A1A',
-					},
+					title: t('transactions.screenTitle'),
+					headerStyle: { backgroundColor: '#1A1A1A' },
 					headerTintColor: '#FFFFFF',
 					headerShadowVisible: false,
 				}}
 			/>
 
 			<View style={styles.headerContainer}>
-				<Text style={styles.headerTitle}>Manage Recurring Transactions</Text>
-				<Text style={styles.headerSubtitle}>
-					Set up and manage your periodic income and expenses
-				</Text>
+				<Text style={styles.headerTitle}>{t('transactions.headerTitle')}</Text>
+				<Text style={styles.headerSubtitle}>{t('transactions.headerSubtitle')}</Text>
 			</View>
 
 			<View style={styles.content}>
@@ -204,7 +188,7 @@ const TransactionsScreen = () => {
 						onPress={handleAddIncome}
 					>
 						<Ionicons name="add-circle" size={18} color="#15E8FE" style={styles.actionButtonIcon} />
-						<Text style={styles.incomeButtonText}>Add Income</Text>
+						<Text style={styles.incomeButtonText}>{t('transactions.addIncome')}</Text>
 					</TouchableOpacity>
 
 					<TouchableOpacity
@@ -212,14 +196,14 @@ const TransactionsScreen = () => {
 						onPress={handleAddExpense}
 					>
 						<Ionicons name="add-circle" size={18} color="#FF6B6B" style={styles.actionButtonIcon} />
-						<Text style={styles.expenseButtonText}>Add Expense</Text>
+						<Text style={styles.expenseButtonText}>{t('transactions.addExpense')}</Text>
 					</TouchableOpacity>
 				</View>
 
 				<View style={styles.transactionListContainer}>
 					{isLoading ? (
 						<View style={styles.emptyContainer}>
-							<Text style={styles.emptyText}>Loading transactions...</Text>
+							<Text style={styles.emptyText}>{t('transactions.loading')}</Text>
 						</View>
 					) : transactions.length > 0 ? (
 						<FlatList
@@ -238,10 +222,8 @@ const TransactionsScreen = () => {
 						/>
 					) : (
 						<View style={styles.emptyContainer}>
-							<Text style={styles.emptyText}>No recurring transactions yet.</Text>
-							<Text style={styles.emptySubText}>
-								Add your recurring incomes and expenses to better track your finances.
-							</Text>
+							<Text style={styles.emptyText}>{t('transactions.empty')}</Text>
+							<Text style={styles.emptySubText}>{t('transactions.emptySubtitle')}</Text>
 						</View>
 					)}
 				</View>

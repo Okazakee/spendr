@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import type React from 'react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useRecurringTransactions } from '../contexts/RecurringTransactionsContext';
 import { formatCurrency } from '../utils/currencyUtils';
@@ -14,11 +15,11 @@ interface IncomeSectionProps {
 
 const IncomeSection: React.FC<IncomeSectionProps> = () => {
 	const router = useRouter();
+	const { t } = useTranslation();
 	const { transactions } = useRecurringTransactions();
 	const [showIncomeEditor, setShowIncomeEditor] = useState(false);
 	const [showExpenseEditor, setShowExpenseEditor] = useState(false);
 
-	// Calculate totals for display
 	const recurringIncome = transactions
 		.filter((tx) => tx.isIncome && tx.active)
 		.reduce((sum, tx) => sum + tx.amount, 0);
@@ -36,16 +37,15 @@ const IncomeSection: React.FC<IncomeSectionProps> = () => {
 	};
 
 	const handleManageTransactions = () => {
-		// Navigate to transactions management screen
 		router.push('/screens/TransactionsScreen');
 	};
 
 	return (
 		<View style={styles.container}>
 			<View style={styles.headerRow}>
-				<Text style={styles.title}>Periodic Transactions</Text>
+				<Text style={styles.title}>{t('incomeSection.periodicTransactions')}</Text>
 				<TouchableOpacity style={styles.manageButton} onPress={handleManageTransactions}>
-					<Text style={styles.manageButtonText}>Manage transactions</Text>
+					<Text style={styles.manageButtonText}>{t('incomeSection.manageTransactions')}</Text>
 				</TouchableOpacity>
 			</View>
 
@@ -54,7 +54,7 @@ const IncomeSection: React.FC<IncomeSectionProps> = () => {
 				<View style={styles.summaryRow}>
 					{recurringIncome > 0 && (
 						<View style={styles.summaryItem}>
-							<Text style={styles.summaryLabel}>Monthly Income</Text>
+							<Text style={styles.summaryLabel}>{t('incomeSection.monthlyIncome')}</Text>
 							<Text style={[styles.summaryValue, styles.incomeValue]}>
 								+{formatCurrency(recurringIncome)}
 							</Text>
@@ -63,7 +63,7 @@ const IncomeSection: React.FC<IncomeSectionProps> = () => {
 
 					{recurringExpenses > 0 && (
 						<View style={styles.summaryItem}>
-							<Text style={styles.summaryLabel2}>Monthly Expenses</Text>
+							<Text style={styles.summaryLabel2}>{t('incomeSection.monthlyExpenses')}</Text>
 							<Text style={[styles.summaryValue2, styles.expenseValue]}>
 								-{formatCurrency(recurringExpenses)}
 							</Text>
@@ -75,7 +75,7 @@ const IncomeSection: React.FC<IncomeSectionProps> = () => {
 			<View style={styles.buttonsContainer}>
 				<TouchableOpacity style={[styles.button, styles.incomeButton]} onPress={handleIncomePress}>
 					<Ionicons name="arrow-down-circle" size={20} color="#15E8FE" style={styles.buttonIcon} />
-					<Text style={styles.buttonText}>Income</Text>
+					<Text style={styles.buttonText}>{t('incomeSection.income')}</Text>
 				</TouchableOpacity>
 
 				<TouchableOpacity
@@ -83,18 +83,16 @@ const IncomeSection: React.FC<IncomeSectionProps> = () => {
 					onPress={handleExpensePress}
 				>
 					<Ionicons name="arrow-up-circle" size={20} color="#FF6B6B" style={styles.buttonIcon} />
-					<Text style={styles.buttonText}>Expense</Text>
+					<Text style={styles.buttonText}>{t('incomeSection.expense')}</Text>
 				</TouchableOpacity>
 			</View>
 
-			{/* Income Editor Modal */}
 			<TransactionEditor
 				isVisible={showIncomeEditor}
 				onClose={() => setShowIncomeEditor(false)}
 				isIncome={true}
 			/>
 
-			{/* Expense Editor Modal */}
 			<TransactionEditor
 				isVisible={showExpenseEditor}
 				onClose={() => setShowExpenseEditor(false)}

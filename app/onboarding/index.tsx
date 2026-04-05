@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useTranslation } from 'react-i18next';
 import { Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function WelcomeScreen() {
 	const router = useRouter();
+	const { t } = useTranslation();
 
 	const handleGetStarted = () => {
 		router.push('/onboarding/info');
@@ -22,10 +24,8 @@ export default function WelcomeScreen() {
 					/>
 				</View>
 
-				<Text style={styles.title}>Welcome to Spendr</Text>
-				<Text style={styles.subtitle}>
-					The simple way to track expenses, manage your budget, and achieve your financial goals.
-				</Text>
+				<Text style={styles.title}>{t('welcome.title')}</Text>
+				<Text style={styles.subtitle}>{t('welcome.subtitle')}</Text>
 
 				<View style={styles.featuresContainer}>
 					<View style={styles.featureItem}>
@@ -33,10 +33,8 @@ export default function WelcomeScreen() {
 							<Ionicons name="cash-outline" size={26} color="#15E8FE" />
 						</View>
 						<View style={styles.featureTextContainer}>
-							<Text style={styles.featureTitle}>Track Expenses</Text>
-							<Text style={styles.featureDescription}>
-								Keep track of all your expenses in one place
-							</Text>
+							<Text style={styles.featureTitle}>{t('welcome.trackExpenses')}</Text>
+							<Text style={styles.featureDescription}>{t('welcome.trackExpensesDesc')}</Text>
 						</View>
 					</View>
 
@@ -45,8 +43,8 @@ export default function WelcomeScreen() {
 							<Ionicons name="wallet-outline" size={26} color="#15E8FE" />
 						</View>
 						<View style={styles.featureTextContainer}>
-							<Text style={styles.featureTitle}>Manage Budget</Text>
-							<Text style={styles.featureDescription}>Set monthly budgets and stay on track</Text>
+							<Text style={styles.featureTitle}>{t('welcome.manageBudget')}</Text>
+							<Text style={styles.featureDescription}>{t('welcome.manageBudgetDesc')}</Text>
 						</View>
 					</View>
 
@@ -55,8 +53,8 @@ export default function WelcomeScreen() {
 							<Ionicons name="pie-chart-outline" size={26} color="#15E8FE" />
 						</View>
 						<View style={styles.featureTextContainer}>
-							<Text style={styles.featureTitle}>Insightful Reports</Text>
-							<Text style={styles.featureDescription}>Visualize your spending patterns</Text>
+							<Text style={styles.featureTitle}>{t('welcome.insightfulReports')}</Text>
+							<Text style={styles.featureDescription}>{t('welcome.insightfulReportsDesc')}</Text>
 						</View>
 					</View>
 				</View>
@@ -64,7 +62,7 @@ export default function WelcomeScreen() {
 
 			<View style={styles.footer}>
 				<TouchableOpacity style={styles.button} onPress={handleGetStarted}>
-					<Text style={styles.buttonText}>Get Started</Text>
+					<Text style={styles.buttonText}>{t('welcome.getStarted')}</Text>
 					<Ionicons name="arrow-forward" size={20} color="#000000" style={{ marginLeft: 8 }} />
 				</TouchableOpacity>
 			</View>

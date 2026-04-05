@@ -3,6 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
 	FlatList,
 	Image,
@@ -22,6 +23,7 @@ import { setOnboardingCompleted } from '../utils/onboardingUtils';
 
 export default function SecurityScreen() {
 	const router = useRouter();
+	const { t } = useTranslation();
 	const { currentCurrency, setCurrency } = useCurrency();
 	const [biometricAvailable, setBiometricAvailable] = useState(false);
 	const [biometricEnabled, setBiometricEnabled] = useState(false);
@@ -203,7 +205,7 @@ export default function SecurityScreen() {
 				<TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
 					<Ionicons name="arrow-back" size={24} color="#FFFFFF" />
 				</TouchableOpacity>
-				<Text style={styles.headerTitle}>Preferences</Text>
+				<Text style={styles.headerTitle}>{t('onboardingSecurity.screenTitle')}</Text>
 				<View style={styles.headerRight} />
 			</View>
 
@@ -216,20 +218,15 @@ export default function SecurityScreen() {
 					/>
 				</View>
 
-				<Text style={styles.title}>Almost Done!</Text>
-				<Text style={styles.subtitle}>
-					Set up your preferences to customize your experience. You can always change these later in
-					settings.
-				</Text>
+				<Text style={styles.title}>{t('onboardingSecurity.title')}</Text>
+				<Text style={styles.subtitle}>{t('onboardingSecurity.subtitle')}</Text>
 
 				<View style={styles.optionsContainer}>
 					{/* Currency Selection Option */}
 					<View style={styles.securityOption}>
 						<View style={styles.optionTextContainer}>
-							<Text style={styles.optionTitle}>Preferred Currency</Text>
-							<Text style={styles.optionDescription}>
-								Select the currency you want to use for tracking expenses
-							</Text>
+							<Text style={styles.optionTitle}>{t('onboardingSecurity.preferredCurrency')}</Text>
+							<Text style={styles.optionDescription}>{t('onboardingSecurity.preferredCurrencyDesc')}</Text>
 						</View>
 
 						<TouchableOpacity style={styles.currencySelector} onPress={handleOpenCurrencySelector}>
@@ -241,10 +238,8 @@ export default function SecurityScreen() {
 					{/* Notifications Option */}
 					<View style={styles.securityOption}>
 						<View style={styles.optionTextContainer}>
-							<Text style={styles.optionTitle}>Notifications</Text>
-							<Text style={styles.optionDescription}>
-								Get reminded about upcoming recurring transactions
-							</Text>
+							<Text style={styles.optionTitle}>{t('onboardingSecurity.notifications')}</Text>
+							<Text style={styles.optionDescription}>{t('onboardingSecurity.notificationsDesc')}</Text>
 						</View>
 						<Switch
 							value={notificationsEnabled}
@@ -259,10 +254,8 @@ export default function SecurityScreen() {
 					{biometricAvailable ? (
 						<View style={styles.securityOption}>
 							<View style={styles.optionTextContainer}>
-								<Text style={styles.optionTitle}>{biometricType} Authentication</Text>
-								<Text style={styles.optionDescription}>
-									Require {biometricType.toLowerCase()} authentication to access the app
-								</Text>
+								<Text style={styles.optionTitle}>{t('onboardingSecurity.biometricAuth', { biometricType })}</Text>
+								<Text style={styles.optionDescription}>{t('onboardingSecurity.biometricAuthDesc', { biometricType: biometricType.toLowerCase() })}</Text>
 							</View>
 							<Switch
 								value={biometricEnabled}
@@ -275,10 +268,8 @@ export default function SecurityScreen() {
 					) : (
 						<View style={styles.securityOption}>
 							<View style={styles.optionTextContainer}>
-								<Text style={styles.optionTitle}>Biometric Authentication</Text>
-								<Text style={styles.optionDescription}>
-									Biometric authentication is not available on this device
-								</Text>
+								<Text style={styles.optionTitle}>{t('onboardingSecurity.biometricAuth', { biometricType: 'Biometric' })}</Text>
+								<Text style={styles.optionDescription}>{t('onboardingSecurity.biometricUnavailableDesc')}</Text>
 							</View>
 							<Switch
 								value={false}
@@ -298,7 +289,7 @@ export default function SecurityScreen() {
 					onPress={handleComplete}
 					disabled={isLoading}
 				>
-					<Text style={styles.buttonText}>{isLoading ? 'Setting Up...' : 'Complete Setup'}</Text>
+					<Text style={styles.buttonText}>{isLoading ? t('onboardingSecurity.settingUp') : t('onboardingSecurity.completeSetup')}</Text>
 				</TouchableOpacity>
 			</View>
 
@@ -307,7 +298,7 @@ export default function SecurityScreen() {
 				<View style={styles.modalContainer}>
 					<View style={styles.modalContent}>
 						<View style={styles.modalHeader}>
-							<Text style={styles.modalTitle}>Select Currency</Text>
+							<Text style={styles.modalTitle}>{t('onboardingSecurity.selectCurrency')}</Text>
 							<TouchableOpacity
 								onPress={() => setShowCurrencyModal(false)}
 								style={styles.closeButton}

@@ -1,5 +1,6 @@
 import type React from 'react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { useBudget } from '../contexts/BudgetContext';
@@ -13,6 +14,7 @@ interface BudgetEditorProps {
 }
 
 const BudgetEditor: React.FC<BudgetEditorProps> = ({ isVisible, onClose }) => {
+	const { t } = useTranslation();
 	const { currentBudget, setBudgetForCurrentPeriod, clearBudgetForCurrentPeriod } = useBudget();
 	const { selectedMonthName, selectedYear } = usePeriod();
 	const { currentCurrency } = useCurrency();
@@ -23,20 +25,18 @@ const BudgetEditor: React.FC<BudgetEditorProps> = ({ isVisible, onClose }) => {
 
 	const handleSave = async () => {
 		try {
-			// Parse the input to get a numeric value
 			const amount = parseAmount(budgetInput);
 
 			if (Number.isNaN(amount) || amount <= 0) {
-				Alert.alert('Invalid Budget', 'Please enter a valid budget amount greater than zero.');
+				Alert.alert(t('budgetEditor.invalidBudget'), t('budgetEditor.invalidBudgetMsg'));
 				return;
 			}
 
-			// Save the budget
 			await setBudgetForCurrentPeriod(amount);
 			onClose();
 		} catch (error) {
 			console.error('Failed to save budget:', error);
-			Alert.alert('Error', 'Failed to save budget. Please try again.');
+			Alert.alert(t('budgetEditor.error'), t('budgetEditor.failedSave'));
 		}
 	};
 
@@ -46,7 +46,7 @@ const BudgetEditor: React.FC<BudgetEditorProps> = ({ isVisible, onClose }) => {
 			onClose();
 		} catch (error) {
 			console.error('Failed to clear budget:', error);
-			Alert.alert('Error', 'Failed to clear budget. Please try again.');
+			Alert.alert(t('budgetEditor.error'), t('budgetEditor.failedClear'));
 		}
 	};
 
@@ -54,7 +54,7 @@ const BudgetEditor: React.FC<BudgetEditorProps> = ({ isVisible, onClose }) => {
 		<Modal visible={isVisible} transparent={true} animationType="slide">
 			<View style={styles.modalContainer}>
 				<View style={styles.modalContent}>
-					<Text style={styles.modalTitle}>Set Budget</Text>
+					<Text style={styles.modalTitle}>{t('budgetEditor.modalTitle')}</Text>
 					<Text style={styles.periodText}>
 						{selectedMonthName} {selectedYear}
 					</Text>
@@ -65,7 +65,7 @@ const BudgetEditor: React.FC<BudgetEditorProps> = ({ isVisible, onClose }) => {
 							style={styles.input}
 							value={budgetInput}
 							onChangeText={setBudgetInput}
-							placeholder="Enter budget amount"
+							placeholder={t('budgetEditor.placeholder')}
 							placeholderTextColor="rgba(255, 255, 255, 0.3)"
 							keyboardType="decimal-pad"
 							autoFocus
@@ -73,23 +73,23 @@ const BudgetEditor: React.FC<BudgetEditorProps> = ({ isVisible, onClose }) => {
 					</View>
 
 					<View style={styles.currentBudgetContainer}>
-						<Text style={styles.currentBudgetLabel}>Current Budget:</Text>
+						<Text style={styles.currentBudgetLabel}>{t('budgetEditor.currentBudget')}</Text>
 						<Text style={styles.currentBudgetValue}>
-							{currentBudget !== null ? formatCurrency(currentBudget) : 'Not set'}
+							{currentBudget !== null ? formatCurrency(currentBudget) : t('budgetEditor.notSet')}
 						</Text>
 					</View>
 
 					<View style={styles.buttonRow}>
 						<TouchableOpacity style={styles.clearButton} onPress={handleClear}>
-							<Text style={styles.clearButtonText}>Clear</Text>
+							<Text style={styles.clearButtonText}>{t('budgetEditor.clear')}</Text>
 						</TouchableOpacity>
 
 						<TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-							<Text style={styles.cancelButtonText}>Cancel</Text>
+							<Text style={styles.cancelButtonText}>{t('budgetEditor.cancel')}</Text>
 						</TouchableOpacity>
 
 						<TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-							<Text style={styles.saveButtonText}>Save</Text>
+							<Text style={styles.saveButtonText}>{t('budgetEditor.save')}</Text>
 						</TouchableOpacity>
 					</View>
 				</View>

@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
 	RefreshControl,
 	ScrollView,
@@ -19,6 +20,7 @@ import type { Transaction } from '../database/schema';
 
 const HomeScreen = () => {
 	const router = useRouter();
+	const { t } = useTranslation();
 	const { currentPeriodTransactions, monthlyTotal, isLoading, refreshData } = useTransactions();
 
 	const { processTransactions } = useRecurringTransactions();
@@ -41,9 +43,7 @@ const HomeScreen = () => {
 	const handleRefresh = useCallback(async () => {
 		setRefreshing(true);
 		try {
-			// Process any due recurring transactions
 			await processTransactions();
-			// Then refresh all transaction data
 			await refreshData();
 		} catch (error) {
 			console.error('Error during refresh:', error);
@@ -67,7 +67,6 @@ const HomeScreen = () => {
 		router.push({ pathname: '/settings' });
 	};
 
-	// Get the most recent 5 transactions, sorted by date
 	const recentTransactions = [...currentPeriodTransactions]
 		.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 		.slice(0, 5);
@@ -78,7 +77,7 @@ const HomeScreen = () => {
 
 			{/* Header */}
 			<View style={styles.header}>
-				<Text style={styles.headerTitle}>Spendr</Text>
+				<Text style={styles.headerTitle}>{t('home.title')}</Text>
 				<TouchableOpacity onPress={handleOpenSettings}>
 					<Ionicons name="settings-outline" size={24} color="#ffffff" />
 				</TouchableOpacity>
@@ -105,19 +104,17 @@ const HomeScreen = () => {
 
 				{/* Recent Transactions */}
 				<View style={styles.sectionHeader}>
-					<Text style={styles.sectionTitle}>Recent Transactions</Text>
+					<Text style={styles.sectionTitle}>{t('home.recentTransactions')}</Text>
 					<TouchableOpacity onPress={handleViewAllTransactions}>
-						<Text style={styles.seeAllText}>See All</Text>
+						<Text style={styles.seeAllText}>{t('home.seeAll')}</Text>
 					</TouchableOpacity>
 				</View>
 
 				<View style={styles.transactionsContainer}>
 					{isLoading ? (
-						<Text style={styles.emptyText}>Loading transactions...</Text>
+						<Text style={styles.emptyText}>{t('home.loading')}</Text>
 					) : recentTransactions.length === 0 ? (
-						<Text style={styles.emptyText}>
-							No transactions yet. Tap the "+" button to add one.
-						</Text>
+						<Text style={styles.emptyText}>{t('home.empty')}</Text>
 					) : (
 						recentTransactions.map((transaction) => (
 							<TransactionItem

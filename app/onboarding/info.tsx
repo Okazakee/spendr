@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useTranslation } from 'react-i18next';
 import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function InfoScreen() {
 	const router = useRouter();
+	const { t } = useTranslation();
 
 	const handleContinue = () => {
 		router.push('/onboarding/security');
@@ -17,7 +19,7 @@ export default function InfoScreen() {
 				<TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
 					<Ionicons name="arrow-back" size={24} color="#FFFFFF" />
 				</TouchableOpacity>
-				<Text style={styles.headerTitle}>How It Works</Text>
+				<Text style={styles.headerTitle}>{t('info.screenTitle')}</Text>
 				<View style={styles.headerRight} />
 			</View>
 
@@ -26,50 +28,38 @@ export default function InfoScreen() {
 					<View style={styles.iconContainer}>
 						<Ionicons name="card-outline" size={32} color="#15E8FE" />
 					</View>
-					<Text style={styles.sectionTitle}>Add Your Transactions</Text>
-					<Text style={styles.sectionDescription}>
-						Track your daily expenses and income with just a few taps. Categorize them to better
-						understand your spending habits.
-					</Text>
+					<Text style={styles.sectionTitle}>{t('info.addTransactions')}</Text>
+					<Text style={styles.sectionDescription}>{t('info.addTransactionsDesc')}</Text>
 				</View>
 
 				<View style={styles.section}>
 					<View style={styles.iconContainer}>
 						<Ionicons name="repeat-outline" size={32} color="#15E8FE" />
 					</View>
-					<Text style={styles.sectionTitle}>Recurring Transactions</Text>
-					<Text style={styles.sectionDescription}>
-						Set up recurring expenses and income like rent, salary, or subscriptions to
-						automatically track them every month.
-					</Text>
+					<Text style={styles.sectionTitle}>{t('info.recurringTransactions')}</Text>
+					<Text style={styles.sectionDescription}>{t('info.recurringTransactionsDesc')}</Text>
 				</View>
 
 				<View style={styles.section}>
 					<View style={styles.iconContainer}>
 						<Ionicons name="wallet-outline" size={32} color="#15E8FE" />
 					</View>
-					<Text style={styles.sectionTitle}>Monthly Budget</Text>
-					<Text style={styles.sectionDescription}>
-						Set a monthly budget to help you stay on track with your financial goals. Get notified
-						when you're close to your limit.
-					</Text>
+					<Text style={styles.sectionTitle}>{t('info.monthlyBudget')}</Text>
+					<Text style={styles.sectionDescription}>{t('info.monthlyBudgetDesc')}</Text>
 				</View>
 
 				<View style={styles.section}>
 					<View style={styles.iconContainer}>
 						<Ionicons name="pie-chart-outline" size={32} color="#15E8FE" />
 					</View>
-					<Text style={styles.sectionTitle}>Insightful Reports</Text>
-					<Text style={styles.sectionDescription}>
-						Visualize your spending patterns through customized reports. Understand where your money
-						goes with beautiful charts.
-					</Text>
+					<Text style={styles.sectionTitle}>{t('info.insightfulReports')}</Text>
+					<Text style={styles.sectionDescription}>{t('info.insightfulReportsDesc')}</Text>
 				</View>
 			</ScrollView>
 
 			<View style={styles.footer}>
 				<TouchableOpacity style={styles.button} onPress={handleContinue}>
-					<Text style={styles.buttonText}>Continue</Text>
+					<Text style={styles.buttonText}>{t('info.continue')}</Text>
 				</TouchableOpacity>
 			</View>
 		</SafeAreaView>

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
-import type React from 'react';
 import { useCallback, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
 	Dimensions,
 	RefreshControl,
@@ -33,6 +33,7 @@ const ReportsScreen = () => {
 		currentPeriodTransactions,
 	} = useTransactions();
 	const { selectedMonthName, selectedYear } = usePeriod();
+	const { t } = useTranslation();
 
 	const [refreshing, setRefreshing] = useState(false);
 	const [showExpenses, setShowExpenses] = useState(true);
@@ -41,7 +42,6 @@ const ReportsScreen = () => {
 	const [incomeChartError, setIncomeChartError] = useState(false);
 	const [trendChartError, setTrendChartError] = useState(false);
 
-	// Memoize expensive chart data preparation
 	const expensesPieChartData = useMemo(() => {
 		return categoryTotals.expenses
 			.filter(
@@ -90,9 +90,7 @@ const ReportsScreen = () => {
 			.sort((a, b) => b.amount - a.amount);
 	}, [categoryTotals.incomes, categories]);
 
-	// Memoize line chart data preparation
 	const lineChartData = useMemo(() => {
-		// Safely prepare line chart data
 		const validMonthlyExpenses = monthlyData.expenses
 			.filter(
 				(data) =>
@@ -113,7 +111,6 @@ const ReportsScreen = () => {
 			)
 			.sort((a, b) => a.month - b.month);
 
-		// Ensure we have labels even if no data
 		const monthLabels =
 			validMonthlyExpenses.length > 0
 				? validMonthlyExpenses.map((data) => getMonthName(data.month).substring(0, 3))
@@ -121,7 +118,6 @@ const ReportsScreen = () => {
 					? validMonthlyIncomes.map((data) => getMonthName(data.month).substring(0, 3))
 					: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 
-		// Ensure we have data points even if empty
 		const expenseValues =
 			validMonthlyExpenses.length > 0 ? validMonthlyExpenses.map((data) => data.total) : [0, 0, 0];
 
@@ -133,20 +129,19 @@ const ReportsScreen = () => {
 			datasets: [
 				{
 					data: expenseValues.length > 0 ? expenseValues : [0, 0, 0],
-					color: () => '#FF6B6B', // Red for expenses
+					color: () => '#FF6B6B',
 					strokeWidth: 2,
 				},
 				{
 					data: incomeValues.length > 0 ? incomeValues : [0, 0, 0],
-					color: () => '#4CAF50', // Green for incomes
+					color: () => '#4CAF50',
 					strokeWidth: 2,
 				},
 			],
-			legend: ['Expenses', 'Incomes'],
+			legend: [t('reports.expenses'), t('reports.incomes')],
 		};
-	}, [monthlyData.expenses, monthlyData.incomes]);
+	}, [monthlyData.expenses, monthlyData.incomes, t]);
 
-	// Memoize chart config
 	const chartConfig = useMemo(
 		() => ({
 			backgroundGradientFrom: '#1E1E1E',
@@ -154,14 +149,8 @@ const ReportsScreen = () => {
 			decimalPlaces: 0,
 			color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
 			labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-			style: {
-				borderRadius: 16,
-			},
-			propsForDots: {
-				r: '6',
-				strokeWidth: '2',
-				stroke: '#5E5CE6',
-			},
+			style: { borderRadius: 16 },
+			propsForDots: { r: '6', strokeWidth: '2', stroke: '#5E5CE6' },
 		}),
 		[]
 	);
@@ -170,7 +159,6 @@ const ReportsScreen = () => {
 		setRefreshing(true);
 		try {
 			await refreshData();
-			// Reset chart errors on refresh
 			setExpenseChartError(false);
 			setIncomeChartError(false);
 			setTrendChartError(false);
@@ -181,17 +169,14 @@ const ReportsScreen = () => {
 		}
 	}, [refreshData]);
 
-	// Memoize render functions for chart components
 	// biome-ignore lint/correctness/useExhaustiveDependencies: intentional one-time effect
 	const renderExpensePieChart = useCallback(() => {
 		if (expenseChartError) {
-			return <Text style={styles.errorText}>Unable to display expense chart</Text>;
+			return <Text style={styles.errorText}>{t('reports.errorExpenseChart')}</Text>;
 		}
-
 		if (expensesPieChartData.length === 0) {
-			return <Text style={styles.emptyText}>No expense data available</Text>;
+			return <Text style={styles.emptyText}>{t('reports.noExpenseData')}</Text>;
 		}
-
 		try {
 			return (
 				<View style={styles.chartContainer}>
@@ -210,20 +195,18 @@ const ReportsScreen = () => {
 		} catch (error) {
 			console.error('Error rendering expense chart:', error);
 			setExpenseChartError(true);
-			return <Text style={styles.errorText}>Error rendering expense chart</Text>;
+			return <Text style={styles.errorText}>{t('reports.renderErrorExpense')}</Text>;
 		}
-	}, [expensesPieChartData, chartConfig, expenseChartError, width]);
+	}, [expensesPieChartData, chartConfig, expenseChartError, width, t]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: intentional one-time effect
 	const renderIncomePieChart = useCallback(() => {
 		if (incomeChartError) {
-			return <Text style={styles.errorText}>Unable to display income chart</Text>;
+			return <Text style={styles.errorText}>{t('reports.errorIncomeChart')}</Text>;
 		}
-
 		if (incomesPieChartData.length === 0) {
-			return <Text style={styles.emptyText}>No income data available</Text>;
+			return <Text style={styles.emptyText}>{t('reports.noIncomeData')}</Text>;
 		}
-
 		try {
 			return (
 				<View style={styles.chartContainer}>
@@ -242,23 +225,20 @@ const ReportsScreen = () => {
 		} catch (error) {
 			console.error('Error rendering income chart:', error);
 			setIncomeChartError(true);
-			return <Text style={styles.errorText}>Error rendering income chart</Text>;
+			return <Text style={styles.errorText}>{t('reports.renderErrorIncome')}</Text>;
 		}
-	}, [incomesPieChartData, chartConfig, incomeChartError, width]);
+	}, [incomesPieChartData, chartConfig, incomeChartError, width, t]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: intentional one-time effect
 	const renderTrendChart = useCallback(() => {
 		if (trendChartError) {
-			return <Text style={styles.errorText}>Unable to display trend chart</Text>;
+			return <Text style={styles.errorText}>{t('reports.errorTrendChart')}</Text>;
 		}
-
 		const hasExpenses = monthlyData.expenses.some((item) => item && item.total > 0);
 		const hasIncomes = monthlyData.incomes.some((item) => item && item.total > 0);
-
 		if (!hasExpenses && !hasIncomes) {
-			return <Text style={styles.emptyText}>No monthly trend data available</Text>;
+			return <Text style={styles.emptyText}>{t('reports.noTrendData')}</Text>;
 		}
-
 		try {
 			return (
 				<View style={styles.chartContainer}>
@@ -268,10 +248,7 @@ const ReportsScreen = () => {
 						height={220}
 						chartConfig={chartConfig}
 						bezier
-						style={{
-							marginVertical: 8,
-							borderRadius: 16,
-						}}
+						style={{ marginVertical: 8, borderRadius: 16 }}
 						fromZero
 					/>
 				</View>
@@ -279,72 +256,34 @@ const ReportsScreen = () => {
 		} catch (error) {
 			console.error('Error rendering trend chart:', error);
 			setTrendChartError(true);
-			return <Text style={styles.errorText}>Error rendering trend chart</Text>;
+			return <Text style={styles.errorText}>{t('reports.renderErrorTrend')}</Text>;
 		}
-	}, [
-		lineChartData,
-		chartConfig,
-		trendChartError,
-		monthlyData.expenses,
-		monthlyData.incomes,
-		width,
-	]);
+	}, [lineChartData, chartConfig, trendChartError, monthlyData.expenses, monthlyData.incomes, width, t]);
 
 	const renderCategoryBreakdown = useCallback(
 		(
 			data: Array<{ color: string; name: string; amount: number }>,
 			total: number,
-			type:
-				| string
-				| number
-				| boolean
-				| React.ReactElement<
-						string | React.JSXElementConstructor<unknown>,
-						string | React.JSXElementConstructor<unknown>
-				  >
-				| Iterable<React.ReactNode>
-				| React.ReactPortal
-				| null
-				| undefined
+			emptyMessage: string,
+			type: string
 		) => {
 			if (data.length === 0) {
-				return <Text style={styles.emptyText}>No {type} data available</Text>;
+				return <Text style={styles.emptyText}>{emptyMessage}</Text>;
 			}
-
-			return data.map(
-				(
-					item: {
-						color: string;
-						name:
-							| string
-							| number
-							| boolean
-							| React.ReactElement<
-									string | React.JSXElementConstructor<unknown>,
-									string | React.JSXElementConstructor<unknown>
-							  >
-							| Iterable<React.ReactNode>
-							| React.ReactPortal
-							| null
-							| undefined;
-						amount: number;
-					},
-					index: number
-				) => (
-					<View key={`${type}-${index}`} style={styles.categoryBreakdownItem}>
-						<View style={styles.categoryLabelContainer}>
-							<View style={[styles.categoryColorDot, { backgroundColor: item.color }]} />
-							<Text style={styles.categoryLabel}>{item.name}</Text>
-						</View>
-						<View style={styles.categoryAmountContainer}>
-							<Text style={styles.categoryAmount}>{formatCurrency(item.amount)}</Text>
-							<Text style={styles.categoryPercentage}>
-								{((item.amount / (total || 1)) * 100).toFixed(1)}%
-							</Text>
-						</View>
+			return data.map((item, index) => (
+				<View key={`${type}-${index}`} style={styles.categoryBreakdownItem}>
+					<View style={styles.categoryLabelContainer}>
+						<View style={[styles.categoryColorDot, { backgroundColor: item.color }]} />
+						<Text style={styles.categoryLabel}>{item.name}</Text>
 					</View>
-				)
-			);
+					<View style={styles.categoryAmountContainer}>
+						<Text style={styles.categoryAmount}>{formatCurrency(item.amount)}</Text>
+						<Text style={styles.categoryPercentage}>
+							{((item.amount / (total || 1)) * 100).toFixed(1)}%
+						</Text>
+					</View>
+				</View>
+			));
 		},
 		[]
 	);
@@ -361,49 +300,31 @@ const ReportsScreen = () => {
 			);
 		} catch (error) {
 			console.error('Error exporting reports:', error);
-			// Alert is already handled in the exportFinancialReport function
 		}
-	}, [
-		selectedMonthName,
-		selectedYear,
-		currentPeriodTransactions,
-		categories,
-		monthlyData,
-		categoryTotals,
-	]);
+	}, [selectedMonthName, selectedYear, currentPeriodTransactions, categories, monthlyData, categoryTotals]);
 
-	// Toggle handlers with useCallback
-	const handleToggleExpenses = useCallback(() => {
-		setShowExpenses((prev) => !prev);
-	}, []);
-
-	const handleToggleIncomes = useCallback(() => {
-		setShowIncomes((prev) => !prev);
-	}, []);
+	const handleToggleExpenses = useCallback(() => setShowExpenses((prev) => !prev), []);
+	const handleToggleIncomes = useCallback(() => setShowIncomes((prev) => !prev), []);
 
 	return (
 		<SafeAreaView style={styles.container}>
 			<Stack.Screen
 				options={{
-					title: 'Reports & Analytics',
-					headerStyle: {
-						backgroundColor: '#1A1A1A',
-					},
+					title: t('reports.screenTitle'),
+					headerStyle: { backgroundColor: '#1A1A1A' },
 					headerTintColor: '#FFFFFF',
 					headerShadowVisible: false,
 				}}
 			/>
 
 			<View style={styles.headerContainer}>
-				<Text style={styles.headerTitle}>Financial Analytics</Text>
-				<Text style={styles.headerSubtitle}>
-					Track and analyze your spending and income patterns
-				</Text>
+				<Text style={styles.headerTitle}>{t('reports.headerTitle')}</Text>
+				<Text style={styles.headerSubtitle}>{t('reports.headerSubtitle')}</Text>
 			</View>
 
 			<View style={styles.toggleContainer}>
 				<View style={styles.toggleOption}>
-					<Text style={styles.toggleLabel}>Expenses</Text>
+					<Text style={styles.toggleLabel}>{t('reports.expenses')}</Text>
 					<Switch
 						value={showExpenses}
 						onValueChange={handleToggleExpenses}
@@ -411,9 +332,8 @@ const ReportsScreen = () => {
 						thumbColor={showExpenses ? '#FF6B6B' : '#f4f3f4'}
 					/>
 				</View>
-
 				<View style={styles.toggleOption}>
-					<Text style={styles.toggleLabel}>Incomes</Text>
+					<Text style={styles.toggleLabel}>{t('reports.incomes')}</Text>
 					<Switch
 						value={showIncomes}
 						onValueChange={handleToggleIncomes}
@@ -436,27 +356,27 @@ const ReportsScreen = () => {
 				}
 			>
 				{isLoading ? (
-					<Text style={styles.loadingText}>Loading reports...</Text>
+					<Text style={styles.loadingText}>{t('reports.loading')}</Text>
 				) : (
 					<>
 						{/* Summary Section */}
 						<View style={styles.sectionContainer}>
-							<Text style={styles.sectionTitle}>Monthly Summary</Text>
+							<Text style={styles.sectionTitle}>{t('reports.monthlySummary')}</Text>
 							<View style={styles.summaryContainer}>
 								<View style={styles.summaryItem}>
-									<Text style={styles.summaryLabel}>Income</Text>
+									<Text style={styles.summaryLabel}>{t('reports.income')}</Text>
 									<Text style={[styles.summaryValue, styles.incomeValue]}>
 										{formatCurrency(monthlyTotal.incomes)}
 									</Text>
 								</View>
 								<View style={styles.summaryItem}>
-									<Text style={styles.summaryLabel}>Expenses</Text>
+									<Text style={styles.summaryLabel}>{t('reports.expenses')}</Text>
 									<Text style={[styles.summaryValue, styles.expenseValue]}>
 										{formatCurrency(monthlyTotal.expenses)}
 									</Text>
 								</View>
 								<View style={styles.summaryItem}>
-									<Text style={styles.summaryLabel}>Net</Text>
+									<Text style={styles.summaryLabel}>{t('reports.net')}</Text>
 									<Text
 										style={[
 											styles.summaryValue,
@@ -472,11 +392,15 @@ const ReportsScreen = () => {
 						{/* Expenses by Category */}
 						{showExpenses && (
 							<View style={styles.sectionContainer}>
-								<Text style={styles.sectionTitle}>Expenses by Category</Text>
+								<Text style={styles.sectionTitle}>{t('reports.expensesByCategory')}</Text>
 								{renderExpensePieChart()}
-
 								<View style={styles.categoryBreakdownContainer}>
-									{renderCategoryBreakdown(expensesPieChartData, monthlyTotal.expenses, 'expense')}
+									{renderCategoryBreakdown(
+										expensesPieChartData,
+										monthlyTotal.expenses,
+										t('reports.noExpenseData'),
+										'expense'
+									)}
 								</View>
 							</View>
 						)}
@@ -484,18 +408,22 @@ const ReportsScreen = () => {
 						{/* Income by Category */}
 						{showIncomes && (
 							<View style={styles.sectionContainer}>
-								<Text style={styles.sectionTitle}>Income by Category</Text>
+								<Text style={styles.sectionTitle}>{t('reports.incomeByCategory')}</Text>
 								{renderIncomePieChart()}
-
 								<View style={styles.categoryBreakdownContainer}>
-									{renderCategoryBreakdown(incomesPieChartData, monthlyTotal.incomes, 'income')}
+									{renderCategoryBreakdown(
+										incomesPieChartData,
+										monthlyTotal.incomes,
+										t('reports.noIncomeData'),
+										'income'
+									)}
 								</View>
 							</View>
 						)}
 
 						{/* Monthly Spending Trend */}
 						<View style={styles.sectionContainer}>
-							<Text style={styles.sectionTitle}>Monthly Trends</Text>
+							<Text style={styles.sectionTitle}>{t('reports.monthlyTrends')}</Text>
 							{renderTrendChart()}
 						</View>
 
@@ -503,7 +431,7 @@ const ReportsScreen = () => {
 						<View style={styles.exportContainer}>
 							<TouchableOpacity style={styles.exportButton} onPress={handleExportReports}>
 								<Ionicons name="download-outline" size={20} color="#FFFFFF" />
-								<Text style={styles.exportButtonText}>Export Reports</Text>
+								<Text style={styles.exportButtonText}>{t('reports.exportReports')}</Text>
 							</TouchableOpacity>
 						</View>
 					</>

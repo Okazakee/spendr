@@ -1,5 +1,6 @@
 import type React from 'react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useBudget } from '../contexts/BudgetContext';
 import { formatCurrency } from '../utils/currencyUtils';
@@ -18,17 +19,18 @@ const Summary: React.FC<SummaryProps> = ({
 	spent,
 	income: _income,
 	net,
-	title = 'Monthly Summary',
+	title,
 	showPercentage = true,
 }) => {
+	const { t } = useTranslation();
 	const [showBudgetEditor, setShowBudgetEditor] = useState(false);
 	const { currentBudget } = useBudget();
 
-	// Budget is either from context or default (0 if unset)
+	const displayTitle = title ?? t('summary.monthlySummary');
+
 	const budget = currentBudget !== null ? currentBudget : 0;
 	const isBudgetSet = currentBudget !== null;
 
-	// Only calculate these if budget is set
 	const percentUsed = isBudgetSet && budget > 0 ? (spent / budget) * 100 : 0;
 	const remaining = isBudgetSet ? budget - spent : 0;
 	const isOverBudget = isBudgetSet && spent > budget;
@@ -40,15 +42,15 @@ const Summary: React.FC<SummaryProps> = ({
 	return (
 		<View style={styles.container}>
 			<View style={styles.headerRow}>
-				<Text style={styles.title}>{title}</Text>
+				<Text style={styles.title}>{displayTitle}</Text>
 				<View style={styles.headerActions}>
 					<PeriodSelector style={styles.monthSelector} textStyle={styles.month} />
 				</View>
 			</View>
 
-			{/* Net Value (Simplified) */}
+			{/* Net Value */}
 			<View style={styles.netContainer}>
-				<Text style={styles.netLabel}>Balance</Text>
+				<Text style={styles.netLabel}>{t('summary.balance')}</Text>
 				<Text
 					style={[
 						styles.netValue,
@@ -69,11 +71,11 @@ const Summary: React.FC<SummaryProps> = ({
 					<View style={styles.divider} />
 
 					<View style={styles.budgetRow}>
-						<Text style={styles.budgetLabel}>Budget</Text>
+						<Text style={styles.budgetLabel}>{t('summary.budget')}</Text>
 						<View style={styles.budgetValueContainer}>
 							<Text style={styles.budgetValue}>{formatCurrency(budget)}</Text>
 							<TouchableOpacity onPress={handleEditBudget} style={styles.editButton}>
-								<Text style={styles.editButtonText}>Edit</Text>
+								<Text style={styles.editButtonText}>{t('summary.edit')}</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
@@ -91,8 +93,10 @@ const Summary: React.FC<SummaryProps> = ({
 
 					{showPercentage && (
 						<Text style={[styles.progressText, isOverBudget && styles.overBudgetText]}>
-							{percentUsed.toFixed(0)}% used • {isOverBudget ? 'Over budget by ' : ''}
-							{formatCurrency(Math.abs(remaining))} {!isOverBudget ? 'remaining' : ''}
+							{t('summary.percentUsed', { percent: percentUsed.toFixed(0) })} •{' '}
+							{isOverBudget ? `${t('summary.overBudgetBy')} ` : ''}
+							{formatCurrency(Math.abs(remaining))}{' '}
+							{!isOverBudget ? t('summary.remaining') : ''}
 						</Text>
 					)}
 				</>
@@ -103,9 +107,9 @@ const Summary: React.FC<SummaryProps> = ({
 				<>
 					<View style={styles.divider} />
 					<View style={styles.noBudgetContainer}>
-						<Text style={styles.noBudgetText}>No budget set for this month</Text>
+						<Text style={styles.noBudgetText}>{t('summary.noBudget')}</Text>
 						<TouchableOpacity onPress={handleEditBudget} style={styles.setBudgetButton}>
-							<Text style={styles.setBudgetButtonText}>Set Budget</Text>
+							<Text style={styles.setBudgetButtonText}>{t('summary.setBudget')}</Text>
 						</TouchableOpacity>
 					</View>
 				</>

@@ -1,3 +1,4 @@
+import '../i18n';
 import 'react-native-get-random-values';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFonts } from 'expo-font';
@@ -8,6 +9,7 @@ import { Text, View } from 'react-native';
 import BiometricAuthScreen from './components/BiometricAuthScreen';
 import { BudgetProvider } from './contexts/BudgetContext';
 import { CurrencyProvider } from './contexts/CurrencyContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import { PeriodProvider } from './contexts/PeriodContext';
 import { RecurringTransactionsProvider } from './contexts/RecurringTransactionsContext';
 import { TransactionsProvider } from './contexts/TransactionsContext';
@@ -167,6 +169,7 @@ export default function RootLayout() {
 	}
 
 	return (
+		<LanguageProvider>
 		<CurrencyProvider>
 			<PeriodProvider>
 				<BudgetProvider>
@@ -180,5 +183,6 @@ export default function RootLayout() {
 				</BudgetProvider>
 			</PeriodProvider>
 		</CurrencyProvider>
+		</LanguageProvider>
 	);
 }
