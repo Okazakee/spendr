@@ -33,9 +33,10 @@ Built during the 24-hour hack.bs hackathon using React Native and Expo, Spendr c
 
 ## 📸 Screenshots
 <div align="center" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 20px 0;">
-  <img src="https://github.com/user-attachments/assets/0e28ff4e-74e3-4b38-9938-b38aa9af95f0" width="180" style="border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Spendr Screenshot 1" />
-  <img src="https://github.com/user-attachments/assets/7234f6d1-32b2-46b1-b290-0c0fb60493d9" width="180" style="border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Spendr Screenshot 2" />
-  <img src="https://github.com/user-attachments/assets/ed902938-2353-47c2-b20c-db4d97c1c706" width="180" style="border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Spendr Screenshot 3" />
+  <img src="assets/images/onboarding.png" width="180" style="border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Onboarding" />
+  <img src="assets/images/home.png" width="180" style="border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Home" />
+  <img src="assets/images/reports.png" width="180" style="border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Reports" />
+  <img src="assets/images/settings.png" width="180" style="border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Settings" />
 </div>
 
 ## 📋 Getting Started
