@@ -55,6 +55,7 @@
 			"favicon": "./assets/images/icon.png"
 		},
 		"plugins": [
+			"./plugins/withAndroidSigning",
 			"expo-router",
 			[
 				"expo-dev-client",
