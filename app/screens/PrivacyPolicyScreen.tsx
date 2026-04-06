@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView, ScrollView, StyleSheet, Text } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function PrivacyPolicyScreen() {
 	return (
@@ -9,196 +10,79 @@ export default function PrivacyPolicyScreen() {
 			<Stack.Screen
 				options={{
 					title: 'Privacy Policy',
-					headerStyle: {
-						backgroundColor: '#1A1A1A',
-					},
+					headerStyle: { backgroundColor: '#1A1A1A' },
 					headerTintColor: '#FFFFFF',
 					headerShadowVisible: false,
 				}}
 			/>
 
-			<ScrollView style={styles.content}>
-				<Text style={styles.title}>Privacy Policy</Text>
-				<Text style={styles.date}>Last Updated: March 23, 2025</Text>
+			<ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+				<Text style={styles.title}>Your data stays{'\n'}<Text style={styles.accent}>on your device.</Text></Text>
+				<Text style={styles.intro}>
+					Spendr is built with privacy by design. We don't collect, share, or sell any personal data — ever.
+				</Text>
+				<Text style={styles.updated}>Last updated: April 6, 2026</Text>
 
-				<Text style={styles.heading}>1. Introduction</Text>
-				<Text style={styles.paragraph}>
-					Welcome to Spendr ("we," "our," or "us"). This Privacy Policy explains how we collect,
-					use, store, protect, and share your personal information when you use our mobile
-					application ("App").
-				</Text>
-				<Text style={styles.paragraph}>
-					We are committed to protecting your privacy and ensuring you have a positive experience
-					using our App. This Privacy Policy complies with the General Data Protection Regulation
-					(GDPR) and other applicable privacy laws.
-				</Text>
+				<View style={styles.pillRow}>
+					{[
+						{ icon: '🔒', label: 'No data collected' },
+						{ icon: '📡', label: 'No internet required' },
+						{ icon: '🗄️', label: 'Local storage only' },
+						{ icon: '🚫', label: 'No third parties' },
+					].map(({ icon, label }) => (
+						<View key={label} style={styles.pill}>
+							<Text style={styles.pillIcon}>{icon}</Text>
+							<Text style={styles.pillLabel}>{label}</Text>
+						</View>
+					))}
+				</View>
 
-				<Text style={styles.heading}>2. Information We Collect</Text>
-				<Text style={styles.subheading}>Personal Information</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>Authentication Data:</Text> If you enable biometric
-					authentication, we use your device's biometric information (fingerprint or facial
-					recognition) through the operating system's secure APIs. We never directly access, store,
-					or process your actual biometric data.
-				</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>User Preferences:</Text> Currency preferences, notification
-					settings, and other app configurations.
-				</Text>
+				<Section icon="📋" title="Information We Collect">
+					Spendr does not collect any personal information. All data you enter — transactions, categories, budgets, and settings — is stored exclusively in a local SQLite database on your device.{'\n\n'}This data never leaves your device and is never transmitted to any server.
+				</Section>
 
-				<Text style={styles.subheading}>Financial Data</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>Transaction Data:</Text> Information about your expenses and
-					income, including amounts, dates, categories, and any notes you add.
-				</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>Budget Information:</Text> Monthly budget amounts you set
-					within the app.
-				</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>Recurring Transactions:</Text> Information about periodic
-					expenses or income you configure.
-				</Text>
+				<Section icon="📤" title="Data Sharing">
+					We do not share, sell, rent, or trade your data with any third party, for any purpose, at any time.{'\n\n'}Spendr has no backend, no user accounts, and no cloud sync. There is nothing to share.
+				</Section>
 
-				<Text style={styles.subheading}>Technical Information</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>Device Information:</Text> Operating system version, device
-					model, and other technical identifiers necessary for the app to function.
-				</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>App Usage Data:</Text> Information about how you use the app,
-					such as features used and user interactions.
-				</Text>
+				<Section icon="🔐" title="Permissions Used">
+					Spendr requests only the permissions strictly necessary to provide its features:{'\n\n'}
+					<Text style={styles.bold}>Biometric authentication</Text> — optional lock screen using Face ID or fingerprint, handled entirely by the OS. No biometric data is accessed by the app.{'\n\n'}
+					<Text style={styles.bold}>Notifications</Text> — local-only reminders for recurring transactions. No notification data is sent externally.{'\n\n'}
+					<Text style={styles.bold}>Storage</Text> — read/write access to export CSV reports to your local files. Files stay on your device.
+				</Section>
 
-				<Text style={styles.heading}>3. How We Use Your Information</Text>
-				<Text style={styles.paragraph}>We use your information for the following purposes:</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>To Provide Our Services:</Text> Processing and storing your
-					financial data to deliver the core functionality of the app.
-				</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>To Personalize Your Experience:</Text> Customizing the app
-					based on your preferences and usage patterns.
-				</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>To Send Notifications:</Text> Sending reminders about
-					recurring transactions or budget limits when you enable notifications.
-				</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>To Improve Our Services:</Text> Analyzing usage patterns to
-					enhance app features and functionality.
-				</Text>
+				<Section icon="👶" title="Children's Privacy">
+					Spendr does not knowingly collect any information from anyone, including children under the age of 13. Since no data is collected at all, there is no risk of inadvertent data collection from minors.
+				</Section>
 
-				<Text style={styles.heading}>4. Data Storage and Security</Text>
-				<Text style={styles.subheading}>Local Storage</Text>
-				<Text style={styles.paragraph}>
-					All your data is stored locally on your device using SQLite database encryption. We employ
-					the following security measures:
-				</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>Local Processing:</Text> All data processing happens directly
-					on your device.
-				</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>No Remote Servers:</Text> We do not transmit your financial
-					data to any remote servers.
-				</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>Optional Biometric Security:</Text> You can enable biometric
-					authentication (Face ID/Fingerprint) for additional security.
-				</Text>
+				<Section icon="🔄" title="Changes to This Policy">
+					If we ever change this privacy policy, the updated version will be published on this page with a new effective date.{'\n\n'}Any future features that involve data collection will be clearly disclosed before they are introduced.
+				</Section>
 
-				<Text style={styles.subheading}>Backups and Exports</Text>
-				<Text style={styles.paragraph}>When you choose to export your data:</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>Local Exports:</Text> Data exports are saved to your device's
-					storage.
-				</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>Sharing:</Text> You control who you share exported data with
-					through your device's sharing features.
-				</Text>
-
-				<Text style={styles.heading}>5. Your Data Protection Rights</Text>
-				<Text style={styles.paragraph}>
-					Under the GDPR and similar regulations, you have the following rights:
-				</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>Right to Access:</Text> You can access all your data directly
-					in the app.
-				</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>Right to Rectification:</Text> You can edit or update your
-					information at any time.
-				</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>Right to Erasure:</Text> You can delete your data using the
-					app's "Reset All Data" function in Settings.
-				</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>Right to Restriction of Processing:</Text> Since all
-					processing is local to your device, you control all processing.
-				</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>Right to Data Portability:</Text> You can export your data in
-					CSV or JSON format from the app.
-				</Text>
-
-				<Text style={styles.heading}>6. Third-Party Integration</Text>
-				<Text style={styles.paragraph}>Our app uses the following third-party services:</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>Expo Notifications:</Text> For scheduling and displaying local
-					notifications about recurring transactions.
-				</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>Expo Local Authentication:</Text> For providing biometric
-					authentication features.
-				</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>Expo File System:</Text> For managing data exports and
-					imports.
-				</Text>
-				<Text style={styles.paragraph}>
-					• <Text style={styles.bold}>Expo Document Picker:</Text> For selecting files during data
-					import.
-				</Text>
-				<Text style={styles.paragraph}>
-					These services operate within your device and do not transmit your financial data to
-					external servers.
-				</Text>
-
-				<Text style={styles.heading}>7. Analytics and Tracking</Text>
-				<Text style={styles.paragraph}>
-					Our app does not include any third-party analytics or tracking tools. We do not collect
-					usage statistics or user behavior information beyond your device.
-				</Text>
-
-				<Text style={styles.heading}>8. Children's Privacy</Text>
-				<Text style={styles.paragraph}>
-					Our App is not directed at children under the age of 13. We do not knowingly collect
-					personal information from children under 13. If you are a parent or guardian and believe
-					your child has provided us with personal information, please contact us.
-				</Text>
-
-				<Text style={styles.heading}>9. Changes to This Privacy Policy</Text>
-				<Text style={styles.paragraph}>
-					We may update our Privacy Policy from time to time. We will notify you of any changes by
-					posting the new Privacy Policy on this page and updating the "Last Updated" date. You are
-					advised to review this Privacy Policy periodically for any changes.
-				</Text>
-
-				<Text style={styles.heading}>10. Contact Us</Text>
-				<Text style={styles.paragraph}>
-					If you have any questions about this Privacy Policy, please contact us at:
-				</Text>
-				<Text style={styles.contactInfo}>privacy@spendr-app.example</Text>
+				<Section icon="✉️" title="Contact">
+					If you have any questions about this privacy policy, you can open an issue on the project repository or reach out via GitHub.
+				</Section>
 
 				<Text style={styles.footer}>
-					By using our App, you agree to the collection and use of information in accordance with
-					this Privacy Policy.
+					Spendr by okazakee — open source.
 				</Text>
 			</ScrollView>
 		</SafeAreaView>
+	);
+}
+
+function Section({ icon, title, children }: { icon: string; title: string; children: React.ReactNode }) {
+	return (
+		<View style={styles.section}>
+			<View style={styles.sectionHeader}>
+				<View style={styles.sectionIcon}>
+					<Text style={styles.sectionIconText}>{icon}</Text>
+				</View>
+				<Text style={styles.sectionTitle}>{title}</Text>
+			</View>
+			<Text style={styles.sectionBody}>{children}</Text>
+		</View>
 	);
 }
 
@@ -207,61 +91,106 @@ const styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: '#121212',
 	},
-	content: {
+	scroll: {
 		flex: 1,
+	},
+	content: {
 		padding: 20,
+		paddingBottom: 48,
 	},
 	title: {
-		fontSize: 24,
-		fontWeight: 'bold',
+		fontSize: 28,
+		fontWeight: '800',
 		color: '#FFFFFF',
-		marginBottom: 4,
-		marginTop: 20,
+		lineHeight: 34,
+		marginBottom: 12,
+		marginTop: 8,
 	},
-	date: {
+	accent: {
+		color: '#15E8FE',
+	},
+	intro: {
 		fontSize: 14,
-		color: 'rgba(255, 255, 255, 0.7)',
+		color: '#9CA3AF',
+		lineHeight: 22,
+		marginBottom: 12,
+	},
+	updated: {
+		fontSize: 12,
+		color: '#9CA3AF',
+		marginBottom: 20,
+	},
+	pillRow: {
+		flexDirection: 'row',
+		flexWrap: 'wrap',
+		gap: 8,
 		marginBottom: 24,
 	},
-	heading: {
-		fontSize: 18,
-		fontWeight: 'bold',
-		color: '#15E8FE',
-		marginTop: 24,
-		marginBottom: 12,
+	pill: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 6,
+		backgroundColor: '#1A1A1A',
+		borderWidth: 1,
+		borderColor: '#3e3e3e',
+		borderRadius: 999,
+		paddingVertical: 6,
+		paddingHorizontal: 12,
 	},
-	subheading: {
-		fontSize: 16,
-		fontWeight: 'bold',
+	pillIcon: {
+		fontSize: 13,
+	},
+	pillLabel: {
+		fontSize: 12,
+		fontWeight: '600',
 		color: '#FFFFFF',
-		marginTop: 16,
-		marginBottom: 8,
 	},
-	paragraph: {
-		fontSize: 14,
-		lineHeight: 22,
-		color: 'rgba(255, 255, 255, 0.9)',
+	section: {
+		backgroundColor: '#1A1A1A',
+		borderWidth: 1,
+		borderColor: '#3e3e3e',
+		borderRadius: 16,
+		overflow: 'hidden',
 		marginBottom: 12,
+	},
+	sectionHeader: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 12,
+		padding: 16,
+		borderBottomWidth: 1,
+		borderBottomColor: '#3e3e3e',
+	},
+	sectionIcon: {
+		width: 34,
+		height: 34,
+		borderRadius: 9,
+		backgroundColor: 'rgba(21, 232, 254, 0.12)',
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+	sectionIconText: {
+		fontSize: 16,
+	},
+	sectionTitle: {
+		fontSize: 15,
+		fontWeight: '700',
+		color: '#FFFFFF',
+	},
+	sectionBody: {
+		fontSize: 13.5,
+		color: '#9CA3AF',
+		lineHeight: 22,
+		padding: 16,
 	},
 	bold: {
-		fontWeight: 'bold',
+		fontWeight: '700',
 		color: '#FFFFFF',
 	},
-	contactInfo: {
-		fontSize: 14,
-		color: '#15E8FE',
-		marginTop: 8,
-		marginBottom: 24,
-	},
 	footer: {
-		fontSize: 14,
-		color: 'rgba(255, 255, 255, 0.7)',
+		fontSize: 12,
+		color: '#9CA3AF',
 		textAlign: 'center',
-		fontStyle: 'italic',
 		marginTop: 24,
-		marginBottom: 40,
-		paddingTop: 16,
-		borderTopWidth: 1,
-		borderTopColor: 'rgba(255, 255, 255, 0.1)',
 	},
 });

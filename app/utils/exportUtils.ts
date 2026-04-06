@@ -1,7 +1,7 @@
 import * as DocumentPicker from 'expo-document-picker';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import { Alert, Platform, Share } from 'react-native';
+import { Alert } from 'react-native';
 import {
 	addRecurringTransaction,
 	addTransaction,
@@ -154,12 +154,11 @@ export const exportToCSV = async (
 		const file = new File(Paths.document, finalFileName);
 		file.write(csvContent);
 
-		const shareOptions = {
-			title: 'Export Transactions',
-			url: Platform.OS === 'android' ? file.contentUri : file.uri,
-		};
-
-		await Share.share(shareOptions);
+		await Sharing.shareAsync(file.uri, {
+			mimeType: 'text/csv',
+			dialogTitle: 'Export Transactions',
+			UTI: 'public.comma-separated-values-text',
+		});
 	} catch (error) {
 		console.error('Error exporting to CSV:', error);
 		Alert.alert('Export Failed', 'There was an error exporting your data. Please try again.');
@@ -221,21 +220,11 @@ export const exportFinancialReport = async (
 		file.write(reportContent);
 
 		// Share the file
-		if (Platform.OS === 'android') {
-			try {
-				await Sharing.shareAsync(file.contentUri, {
-					mimeType: 'text/csv',
-					dialogTitle: 'Share Financial Report',
-				});
-			} catch (error) {
-				console.error('Error sharing file:', error);
-				throw error;
-			}
-		} else {
-			await Sharing.shareAsync(file.uri, {
-				UTI: 'public.comma-separated-values-text',
-			});
-		}
+		await Sharing.shareAsync(file.uri, {
+			mimeType: 'text/csv',
+			dialogTitle: 'Share Financial Report',
+			UTI: 'public.comma-separated-values-text',
+		});
 
 		return;
 	} catch (error) {
@@ -277,21 +266,11 @@ export const exportDatabaseData = async (
 		file.write(jsonData);
 
 		// Share the file
-		if (Platform.OS === 'android') {
-			try {
-				await Sharing.shareAsync(file.contentUri, {
-					mimeType: 'text/json',
-					dialogTitle: 'Share app data backup',
-				});
-			} catch (error) {
-				console.error('Error sharing file:', error);
-				throw error;
-			}
-		} else {
-			await Sharing.shareAsync(file.uri, {
-				UTI: 'public.comma-separated-values-text',
-			});
-		}
+		await Sharing.shareAsync(file.uri, {
+			mimeType: 'application/json',
+			dialogTitle: 'Share app data backup',
+			UTI: 'public.json',
+		});
 
 		Alert.alert(
 			'Export Successful',
